@@ -1,7 +1,7 @@
 {
   "name": "al-agent-harness",
-  "version": "2.1.0",
-  "description": "Four AL commands: safe workspace setup, code-first refactoring, Opus brainstorming with approved SDD, and logical local commits.",
+  "version": "2.2.0",
+  "description": "Four focused commands for Business Central AL development and approved test-first SDD in AL, web, Python, and custom projects.",
   "author": { "name": "waldo & AJ" },
   "repository": "https://github.com/waldo1001/DirectionsEmea.ALAgentHarness",
   "license": "MIT",

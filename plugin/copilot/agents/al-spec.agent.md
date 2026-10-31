@@ -1,6 +1,6 @@
 ---
 name: al-spec
-description: "Internal draft/index writer only after agreed Opus direction, before MAIN final approval; no AL or approval."
+description: "Internal numbered spec writer for an approved direction; no implementation or approval."
 user-invocable: false
 agents: []
 tools: ["read", "search", "edit", "execute"]

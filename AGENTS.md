@@ -54,7 +54,7 @@ Skills, agents, commands, the guardrail hook and the MCP servers come from the
 |------|-----|
 | normalize an active consuming AL workspace | `/AL-start` - folder setup, byte-preserving moves and required local configuration; no AL source edits |
 | review and improve existing AL code | `/AL-refactor` - findings and verified behavior-preserving fixes; no layout setup or feature pipeline |
-| design a new feature | `/AL-brainstorm` - real Opus brainstorming agent, then approved numbered spec and SDD |
+| design a new feature | `/AL-brainstorm` - real Opus brainstorming agent, then approved numbered spec and SDD; routes AL to AL SDD and web/Python/custom projects to project SDD |
 | group and commit existing changes | `/AL-commit` - small grouping agent, short local commits; no code edits, push or PR |
 
 Commands target the active workspace, not tagged plugin resources. Do not run consuming
@@ -67,6 +67,8 @@ Do not launch unrelated command phases. Only brainstorming leads to new-feature 
 Four commands do not limit the number of internal roles. Use `al-spec` for the agreed
 numbered draft, `al-coder` for approved logic after SDD proves RED, `al-build-fixer` only
 on compilation failures, and `al-reviewer` for independent read-only final review.
-`al-sdd` owns test scope, RED/GREEN/mutation evidence and sequential handoffs. Pass the
-same approved paths, scope, source revision and evidence to each actual subagent.
+`al-sdd` owns AL test scope, RED/GREEN/mutation evidence and sequential handoffs;
+`project-sdd` coordinates approved non-AL SDD and `project-reviewer` performs its separate
+read-only final review. Pass the same approved paths, scope, source revision and evidence
+to each actual subagent.
 Keep startup and commit grouping separate; never run all specialists on every command.

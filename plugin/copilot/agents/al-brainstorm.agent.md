@@ -1,6 +1,6 @@
 ---
 name: al-brainstorm
-description: "Opus-only read-only feature research, returning one next question to main."
+description: "Opus-only read-only project feature research, returning one next question to main."
 model: "Claude Opus 4.6 (copilot)"
 tools: ["read", "search", "web", "bc-observatory/*", "bc-code-atlas/*", "microsoft-learn/*"]
 user-invocable: false

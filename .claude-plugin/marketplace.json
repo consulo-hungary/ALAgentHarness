@@ -8,8 +8,8 @@
     {
       "name": "al-agent-harness",
       "source": "./plugin",
-      "description": "The AL agent harness from Directions EMEA 2026: skills, agents, commands, hooks and MCP servers for Business Central AL development.",
-      "version": "2.1.0"
+      "description": "The AL agent harness from Directions EMEA 2026: focused AL commands plus approved test-first SDD for AL, web, Python, and custom projects.",
+      "version": "2.2.0"
     }
   ],
   "metadata": {

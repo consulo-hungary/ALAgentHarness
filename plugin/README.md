@@ -1,12 +1,13 @@
-# AL agent harness 2.1
+# AL agent harness 2.2
 
-Exactly four chat commands, shared between Claude Code and Copilot:
+Exactly four chat commands, shared between Claude Code and Copilot. The historical
+`/AL-brainstorm` name is retained, but its feature workflow is project-aware:
 
 | Command | Boundary |
 |---|---|
 | `/AL-start` | Shallow safe consuming-workspace setup; byte-preserving moves into app/test/docs, empty test is valid. Production source belongs under its app project; test-only source under its test project, never duplicate both. Empty root `PageExtensions`/`TableExtension` buckets are removed; non-empty source moves into the owning project. No AL generation, publish or commits. |
 | `/AL-refactor` | One continuous inherited-model agent inspects/fixes existing AL. Conditional compilation repair; independent final changed-delta review after verification. No layout/spec/SDD pipeline or implicit publish. |
-| `/AL-brainstorm` | One REAL Opus researcher; main asks questions. After agreed direction al-spec writes a numbered draft/index; MAIN explicitly approves the actual spec and NONproduction Sandbox operations, then SDD runs. |
+| `/AL-brainstorm` | One REAL Opus researcher; main resolves the active project profile and asks questions. After agreed direction al-spec writes a numbered draft/index; MAIN approves the actual spec and exact validation/side-effect contract. AL routes to the strict AL/Sandbox SDD; web, Python and custom projects route to generic project SDD. |
 | `/AL-commit` | One small inherited-model agent reviews index/diffs, groups task changes and makes authorized local commits. No edits, unrelated staging, push or PR. |
 
 Type `/` and select the command (the host may display a plugin namespace). A tagged file
@@ -40,10 +41,9 @@ Never run workspace migration on this harness/sample repository.
 
 ## Focused internal roles
 
-Nine canonical agents have matching thin Copilot adapters; only four commands are public.
-The four restored specialists are internal (`user-invocable: false` in Copilot) and inherit
-the model. No mandatory extra specialists in setup/commit beyond applicable existing build
-validation, no lookup agent, shared workflow or legacy public spec/SDD/DoD/PR commands.
+Eleven canonical agents have matching thin Copilot adapters; only four commands are public.
+Internal specialists are `user-invocable: false` in Copilot and inherit the model except
+the required Opus brainstormer. Setup/commit do not launch unnecessary specialists.
 
 | Internal specialist | Conditional boundary |
 |---|---|
@@ -51,6 +51,8 @@ validation, no lookup agent, shared workflow or legacy public spec/SDD/DoD/PR co
 | [al-coder](agents/al-coder.md) | Minimum approved business logic ONLY after compiling/deployed assertion RED; business-source allowlist, Ninja IDs and Labels/rules, assertions unchanged. No feature orchestration or tests/publish/review. |
 | [al-build-fixer](agents/al-build-fixer.md) | Beneficial behavior-preserving compilation repair ONLY after real build failure with errors/scope/packet; at most two cycles. Never tests/publishes or invents IDs. |
 | [al-reviewer](agents/al-reviewer.md) | Real writer-distinct isolated final delta review after final GREEN + current DoD, or verified actual refactor changes. Read/search/BC-source only, no edit/execute/build/publish/tests. Priority/file:line/rule/rationale/confidence findings. |
+| [project-sdd](agents/project-sdd.md) | Approved non-AL coordinator: repository-evidenced profile/commands, test-only RED, isolated coder after RED, actual GREEN, meaningful mutation where feasible, and independent review. |
+| [project-reviewer](agents/project-reviewer.md) | Writer-distinct non-AL final reviewer, strictly read-only; requires current validation evidence. |
 
 [al-sdd](agents/al-sdd.md) owns approval state, tests/stubs/reservations before assertion
 RED, exact test scope, source/built/deployed package hashes and sequential RED -> actual
@@ -61,6 +63,11 @@ need MAIN approval and a new pre-RED phase. Bookkeeping remains mutable, substan
 changes invalidate approval. Sandbox authorization never enables production/destructive
 sync or global security toggles. Refactor keeps one initial deep scan/fixer and reviews
 only the verified changed delta, never zero changes or a forced feature pipeline.
+The [project profile resolver](skills/project-profiles/SKILL.md) keeps common discovery and
+validation evidence language-neutral. The generic project workflow never borrows AL IDs,
+Sandbox assumptions or BC tools; it uses the repository's own commands and explicit
+permissions. For custom projects without existing tests, validation must be agreed before
+implementation rather than invented.
 
 After updating this source, refresh/reinstall the plugin using your host's plugin manager
 and reload/restart the agent session so its installed cache is refreshed. Do not edit
