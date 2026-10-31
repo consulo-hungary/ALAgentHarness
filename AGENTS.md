@@ -32,7 +32,8 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 - Never hardcode user-facing text. A literal in `Error(`, `Message(` or `Confirm(` is blocked.
 - Never edit files outside `app/`, `test/` and the feature's spec in `specs/` for an AL task.
 - Never rewrite git history: no force push, no rebase or reset of commits others may have.
-- Never report done without a green build. "Done" is `DEFINITION-OF-DONE.md`, checked by `/done`.
+- Never report AL implementation done without a green build. Feature completion is
+  `DEFINITION-OF-DONE.md`, checked internally by `definition-of-done`.
 
 ## Skills (loaded on demand)
 
@@ -47,16 +48,25 @@ Skills, agents, commands, the guardrail hook and the MCP servers come from the
 | "is it done?", before review or a PR | `definition-of-done` |
 | before writing, designing or reviewing AL | `company-rules` |
 
-## Agents and commands
+## Four focused commands
 
-| Step | How |
+| Task | Command |
 |------|-----|
-| spec a feature | `/spec <task>` - the `al-spec` agent, interactive, in your own session |
-| implement an approved spec | "implement the spec" - the `al-coder` agent, as a subagent (no command) |
-| check it is done | `/done` - every DoD line with evidence, then DONE or NOT DONE |
-| review it | the `al-reviewer` agent - read-only, findings first, applies BCQuality |
-| implement test-first on a sandbox | `/sdd <spec>` (or `claude --agent al-sdd`), in your own session only: spec -> test -> RED (the test fails) -> business logic -> GREEN (the test passes) -> mutation (break the logic) -> RED (the test catches it) -> GREEN (revert, passes again) |
-| open the PR | `/pr` - standard description from the spec and the `/done` report, opened with the GitHub CLI |
-| capture a session where the harness failed | the `chat-export` skill, only when the developer asks |
-| build and fix until green, without filling this conversation with diagnostics | the `al-build-fixer` agent (subagent) |
-| a simple BC/AL knowledge question (pattern, event, property) | the `al-lookup` agent (subagent on the cheaper haiku model; pass the developer's question as asked) |
+| normalize an active consuming AL workspace | `/AL-start` - folder setup, byte-preserving moves and required local configuration; no AL source edits |
+| review and improve existing AL code | `/AL-refactor` - findings and verified behavior-preserving fixes; no layout setup or feature pipeline |
+| design a new feature | `/AL-brainstorm` - real Opus brainstorming agent, then approved numbered spec and SDD |
+| group and commit existing changes | `/AL-commit` - small grouping agent, short local commits; no code edits, push or PR |
+
+Commands target the active workspace, not tagged plugin resources. Do not run consuming
+project setup on this harness repository. New specs use ascending numeric prefixes, such
+as `1-project-create.md`, `2-carrier-validation.md`; templates and indexes are not specs.
+Do not launch unrelated command phases. Only brainstorming leads to new-feature SDD.
+
+## Internal specialists
+
+Four commands do not limit the number of internal roles. Use `al-spec` for the agreed
+numbered draft, `al-coder` for approved logic after SDD proves RED, `al-build-fixer` only
+on compilation failures, and `al-reviewer` for independent read-only final review.
+`al-sdd` owns test scope, RED/GREEN/mutation evidence and sequential handoffs. Pass the
+same approved paths, scope, source revision and evidence to each actual subagent.
+Keep startup and commit grouping separate; never run all specialists on every command.

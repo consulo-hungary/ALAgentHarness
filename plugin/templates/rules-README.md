@@ -4,7 +4,7 @@
 
 These five rules are one company's opinions, shipped here only to show the mechanism. Yours
 will be different, and that is the point: a markdown file in this folder changes what the
-agent writes and what `/done` checks. No prompt surgery, no skill edits.
+agent writes and what internal DoD checks. No prompt surgery, no skill edits.
 
 | Rule | In one line |
 |------|-------------|
@@ -17,8 +17,8 @@ agent writes and what `/done` checks. No prompt surgery, no skill edits.
 ## How the harness uses this folder
 
 - The `company-rules` skill lists this folder every time; it never works from a fixed list.
-- Agents that write AL (`al-coder`, `al-sdd`) apply every applicable rule while writing.
-- `/done` line D7 and the `al-reviewer` agent report PASS / FAIL per rule.
+- Agents that write AL (`al-refactor`, `al-sdd`) apply every applicable rule while writing.
+- Internal DoD line D7 and refactor review report PASS / FAIL per rule.
 - A rule here wins over general guidance (BCQuality, Microsoft Learn) when they disagree.
 
 ## Add a rule (two minutes)
@@ -54,4 +54,4 @@ What to write. See sample: [`<rule-id>.good.al`](<rule-id>.good.al).
 What to refuse, and the harm it does. See sample: [`<rule-id>.bad.al`](<rule-id>.bad.al).
 ```
 
-Then run `/done` again: the new rule shows up as its own line.
+The next internal DoD check enumerates the new rule as its own line.

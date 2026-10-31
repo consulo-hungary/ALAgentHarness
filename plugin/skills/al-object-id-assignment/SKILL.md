@@ -1,6 +1,7 @@
 ---
 name: al-object-id-assignment
 description: 'Reserve object, field and enum-value IDs with AL Object ID Ninja BEFORE writing the AL artifact, and release IDs that end up unused. Use when: creating any new AL object (table, tableextension, page, pageextension, codeunit, report, enum, enumextension, query, xmlport, permissionset, ...), adding a field through a tableextension, adding an enum value through an enumextension, or deleting/reverting an object whose ID you reserved. Never pick an ID yourself.'
+user-invocable: false
 ---
 
 # AL Object ID Assignment (AL Object ID Ninja)
@@ -93,7 +94,7 @@ Object ID reservation
 ```
 
 When a spec is in play, copy this list into the spec's `## Reserved IDs` table: that table
-is what `/done` checks the code against.
+is what the internal DoD checks the code against.
 
 ## Hard stop - no fallback
 
@@ -120,4 +121,5 @@ branch.
 
 - `al-build-validation` - run after the artifact is written.
 - `.mcp.json` - registers the Ninja MCP server for Claude Code.
-- `specs/TEMPLATE.md` - the `## Reserved IDs` table this skill fills (step 06).
+- The resolved active specRoot's `TEMPLATE.md` (see `al-project-layout`) - the
+  `## Reserved IDs` table this skill fills (step 06).

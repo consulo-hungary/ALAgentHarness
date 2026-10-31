@@ -7,6 +7,9 @@ source: <docs/TASK.md, an issue link, or "conversation">
 
 # <Feature name>
 
+File name: `<next-number>-<feature-kebab-case>.md`. Use one above the highest existing
+positive numeric prefix in the active spec root, not the count of files.
+
 ## Context
 
 Why this feature exists, for whom, and what it changes in their day. Two to five sentences.
@@ -57,7 +60,7 @@ Every Error, Message and Confirm, as the Label it will become.
 
 ## Tests
 
-One row per acceptance criterion, in the same order. `/done` checks that every test named
+One row per acceptance criterion, in the same order. Internal DoD checks that every test named
 here exists.
 
 | Test | Covers | Given / When / Then |
@@ -66,7 +69,7 @@ here exists.
 
 ## Reserved IDs
 
-Filled by the implementing agent from its Ninja reservations. `/done` checks the code
+Filled by the implementing agent from its Ninja reservations. Internal DoD checks the code
 against this table.
 
 | Type | ID | Name | App |

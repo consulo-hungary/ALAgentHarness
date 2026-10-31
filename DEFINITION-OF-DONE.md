@@ -1,7 +1,8 @@
 # Definition of Done
 
 A change is done when every line below is green. Every line has a check a machine can run, so
-"done" is a fact you can show, not a feeling. `/done` runs all of them and answers with one
+"done" is a fact you can show, not a feeling. The internal `definition-of-done` skill runs
+these checks for feature SDD and answers with one
 word: **done** or **not done**.
 
 | # | Done means | Proven by |
@@ -22,7 +23,7 @@ word: **done** or **not done**.
 | It **compiles**, app and tests, with zero errors | D1 |
 | IDs, UI text, scope, spec, the existence of tests and the company rules are **checked** | D2-D7 |
 | It **works**: the tests ran on the sandbox and passed | D8 |
-| A reviewer **read** it | the `al-reviewer` agent, after `/done` |
+| Code was **reviewed** | evidence-backed review within the requested workflow; a separate reviewer is not automatically spawned |
 
 The tests proving something is the `al-sdd` agent's job: its loop (spec -> test -> RED (the
 test fails) -> business logic -> GREEN (the test passes) -> mutation (break the logic on
@@ -31,5 +32,6 @@ the tests fail when the logic is wrong. D8 only proves they pass now.
 
 `<base>` is where the work started: `git merge-base HEAD main` unless you say otherwise.
 
-Not on this list, on purpose: style preferences. Those are review findings (the `al-reviewer`
-agent), not a gate. Add a line here only when you can name the check that proves it.
+Not on this list, on purpose: style preferences. Those are review findings, not a gate.
+Add a line here only when you can name the check that proves it. This feature checklist is
+not a requirement to launch SDD for folder setup, code-only refactoring or commit grouping.

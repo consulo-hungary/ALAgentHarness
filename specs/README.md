@@ -7,14 +7,17 @@ the agent that builds it, and it travels with the PR.
 
 | status | Set by | Means |
 |--------|--------|-------|
-| `draft` | the `al-spec` agent | written, not yet agreed |
+| `draft` | the brainstorming workflow | written, not yet agreed |
 | `approved` | the developer (never an agent on its own) | agreed: this is what gets built |
-| `implemented` | the `al-coder` agent, after a green build | code matches the spec; `/done` checks it |
+| `implemented` | the SDD workflow, after validation | code matches the spec; internal DoD checks it |
 
 ## Rules
 
-- File name: the feature in kebab-case, `specs/preferred-carrier.md`. Start from
+- File name: ascending number plus kebab-case, `specs/2-preferred-carrier.md`. Start from
   `TEMPLATE.md`.
+- Next number is one above the highest positive numeric prefix, not the number of files.
+  Order the index numerically, never renumber completed specs or reuse a deleted number.
+  Legacy unnumbered files stay readable; new feature specs are numbered.
 - Objects are named by type and name. IDs are `<Ninja>` until the implementing agent fills
   `## Reserved IDs`.
 - `depends-on:` lists the specs that must be implemented first. Specs without a dependency
@@ -22,13 +25,15 @@ the agent that builds it, and it travels with the PR.
 - Acceptance criteria and tests map one-to-one: one test per criterion, one criterion per
   test.
 - A spec with open questions stays `draft`.
-- Write one with `/spec <task or file>`. The spec writer adds it to the index below.
+- Write a new feature spec through `/AL-brainstorm`. The workflow adds it to the index.
+  Setup, code-only refactoring and commit grouping do not require feature specs.
 
 ## Index
 
-Every spec in this folder, one row each. Kept in sync by the `al-spec` agent; the status here
+Every spec in this folder, one row each. Kept in sync by the feature workflow; the status here
 follows the spec's frontmatter.
 
 | Spec | Title | Status | Depends on |
 |------|-------|--------|------------|
-| _none yet_ | | | |
+| [1-al-workflow-commands.md](1-al-workflow-commands.md) | Historical AL workflow contract (superseded) | draft | none |
+| [2-focused-commands.md](2-focused-commands.md) | Four focused plugin commands | approved | none |

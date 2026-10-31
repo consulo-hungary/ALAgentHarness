@@ -1,6 +1,7 @@
 ---
 name: al-build-validation
 description: 'Build, diagnose and fix AL code until the build is green. Use when: you created or changed any .al file or app.json, before saying a task is done, before a review or a PR, and when the user asks "does it compile". Provides the build -> diagnostics -> fix -> rebuild loop and a fixed report. Code is not finished until this is green. Does not run tests.'
+user-invocable: false
 ---
 
 # AL Build Validation
@@ -19,12 +20,23 @@ sandbox.
 ## When to use
 
 - After writing or changing AL code, `app.json` or a dependency.
-- Before reporting done, before `/done`, before a review or a PR.
-- Diagnostics-only (a reviewer collecting facts): run steps 1, 2 and 6, fix nothing.
+- Before reporting done, before an internal DoD check, before a review or a PR.
+- Diagnostics-only callers build/collect without fixes. The isolated al-reviewer NEVER
+  executes this skill; it reads supplied fresh build/diagnostic evidence.
 
 ## Procedure
 
 ### 1. Find the build tool
+
+Resolve [al-project-layout](../al-project-layout/SKILL.md) or use the caller's explicit
+packet first. All app/test examples below mean resolved appRoot/testRoot; never reselect
+spec roots. Diagnostics-only/baseline mode fixes nothing and returns errors to main.
+Respect caller scope: relocation/commit validation fixes nothing and never dispatches
+specialists. SDD/refactor may conditionally dispatch [al-build-fixer](../../agents/al-build-fixer.md)
+ONLY after real compilation failure, with errors, safe allowlist and
+[packet](../../references/specialist-handoff.md), when beneficial. Successful builds never
+dispatch it. The fixer runs this loop directly, no nested agents; at most two authorized
+cycles including prior attempts, then BLOCKED. It never runs tests or publishes.
 
 Use what the session exposes; list your tools, do not assume.
 
@@ -35,8 +47,9 @@ Use what the session exposes; list your tools, do not assume.
 | No MCP tool (fallback) | `al compile` CLI, see below | the compiler output |
 
 No tool and no `al` CLI? Hard stop, below. The plugin starts the AL MCP server without a
-project: when a tool answers "no projects are loaded", call `al_addproject` for `app/` and
-`test/` (each folder with an `app.json`) and try again.
+project: when a tool answers "no projects are loaded", call `al_addproject` for each explicitly
+selected EXISTING folder with an `app.json` and try again. Missing test app is not a request
+to invent one. Build only the supplied existing projects, in actual dependency order.
 
 ### 2. Build in dependency order
 
@@ -69,12 +82,14 @@ al compile /project:test /packagecachepath:test/.alpackages /out:test/output.app
 ### 4. Fix errors one by one
 
 Read the file around the reported line, fix the cause (not the symptom), rebuild, re-read the
-diagnostics. Repeat until zero errors. A fix that adds a new object or field goes through
+diagnostics. At most two authorized fix/rebuild cycles; unresolved failures return BLOCKED.
+Validation-only callers never fix. A new file/object also needs explicit scope permission;
+a fix that adds a new object or field goes through
 `al-object-id-assignment` first.
 
-### 5. Stop after three rounds on the same error
+### 5. Stop after two bounded fix cycles
 
-Same error three times: stop, report what you tried and why it fails. Do not delete code,
+Two unsuccessful authorized fix cycles: stop, report what you tried and why it fails. Do not delete code,
 suppress analyzers or `#pragma` your way to green.
 
 Errors that name **this app twice** (AL0275, AL0197: the same object in "Directions Demo" and
@@ -107,6 +122,8 @@ Tests: not run (this skill does not run tests)
 
 ## Related
 
-- `al-build-fixer` agent - runs this loop as a subagent and returns only the report.
+- Run directly or use the conditional fixer handoff above; return actual diagnostics.
+  ANY source edits invalidate old package/GREEN/DoD/review evidence; the coordinator
+  reruns required tests/mutations and fresh independent review, never calls a build tested.
 - `al-object-id-assignment` - before writing any new object or field.
-- `definition-of-done` - "build green" is its first line (step 08).
+- `definition-of-done` - "build green" is its first line (D1).

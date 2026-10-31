@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/copilot/session-start.mjs\"",
+        "powershell": "node \"${PLUGIN_ROOT}/copilot/session-start.mjs\"",
+        "timeoutSec": 10
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/copilot/no-literal-ui-text.mjs\"",
+        "powershell": "node \"${PLUGIN_ROOT}/copilot/no-literal-ui-text.mjs\"",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

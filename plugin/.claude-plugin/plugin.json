@@ -1,7 +1,7 @@
 {
   "name": "al-agent-harness",
-  "version": "1.1.0",
-  "description": "An agent harness for Business Central AL: object IDs reserved with Ninja, a build-diagnose-fix loop, sourced BC knowledge, specs, a coder, a definition of done a machine can check, company rules, test-first SDD and a guardrail hook against hardcoded UI text. Built live at Directions EMEA 2026.",
+  "version": "2.1.0",
+  "description": "Four AL commands: safe workspace setup, code-first refactoring, Opus brainstorming with approved SDD, and logical local commits.",
   "author": {
     "name": "waldo & AJ"
   },

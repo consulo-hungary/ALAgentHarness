@@ -1,6 +1,7 @@
 ---
 name: company-rules
-description: 'Load and apply the company AL rules in rules/ as mandatory constraints, and report PASS / FAIL per rule. Use BEFORE writing or designing any AL code, when reviewing AL, and for /done line D7. Enumerates the folder every time: a new rule file applies without editing this skill.'
+description: "Load company AL rules before writing/design/review; report every applicable rule PASS/FAIL for internal DoD D7."
+user-invocable: false
 ---
 
 # Company Rules
@@ -17,8 +18,8 @@ at hand.
 
 ## When to use
 
-- Before writing AL (the `al-coder` and `al-sdd` agents), before designing (`al-spec`).
-- Reviewing AL (`al-reviewer`), and `/done` line D7.
+- Before writing AL (`al-refactor`, `al-sdd`) and designing (`al-brainstorm`).
+- Reviewing AL and internal DoD line D7.
 
 ## Procedure
 

@@ -1,5 +1,6 @@
 ---
 name: chat-export
+user-invocable: false
 description: 'Export an agent session and turn it into a short diagnose report for whoever maintains the harness: which skills, agents and MCP servers were available versus actually used, which tools failed, where the agent looped. Use when: "export this chat", "why did it not use the skill", "send this session to the devlead", the developer says the tooling (not the code) is failing them. Never runs unasked.'
 ---
 
@@ -55,7 +56,7 @@ Next to the export, `<name>-diagnose.md`:
 Chat export - <date> - <one-line topic>
 Ask:        "<the developer's request>" (turn 1)
 Skills:     offered 9, used 3   never triggered: al-object-id-assignment (turn 4: new table)
-Agents:     al-coder (subagent, turn 6)
+Agents:     al-sdd (subagent, turn 6)
 MCP:        al-object-id-ninja failed to connect; microsoft-learn 2 calls
 Errors:     al_build "project not loaded" x3 (turns 7-9)
 Loops:      same build fix 3 times (turns 7-9)

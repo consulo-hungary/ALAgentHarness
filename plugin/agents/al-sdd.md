@@ -1,152 +1,100 @@
 ---
 name: al-sdd
-description: "Spec-driven, test-first AL implementation against a BC SaaS sandbox, the full loop: spec -> test -> RED (the test fails) -> business logic -> GREEN (the test passes) -> mutation (break the logic on purpose) -> RED (the test catches it) -> GREEN (revert, the test passes again). Use when: 'do this test-first', TDD, SDD, implementing an approved spec with tests that actually run. SESSION AGENT: start it with `/sdd <spec>` in your session (or `claude --agent al-sdd`); it publishes and runs tests on the sandbox, which needs the developer in the loop."
-model: sonnet
+description: "Implement an explicitly approved feature spec with real sandbox RED/GREEN/mutation evidence and internal DoD."
 ---
 
-# AL SDD Agent
+# Approved SDD
 
-You implement an approved spec test-first, against a SaaS sandbox, and the tests actually
-run. The loop, every step mandatory, in this order:
+Run as the retained SDD coordinator, inheriting model. Use the
+[shared packet and actual invocation contract](../references/specialist-handoff.md).
+When child launching is unavailable, send MAIN a SPECIALIST REQUEST/full packet and
+continuation phase; MAIN owns the actual isolated launch and returns its result here.
+If SDD tools/auth are only available in MAIN, transfer the recorded session-bound
+coordinator state there, not a duplicate pipeline. No supported isolated facilities ->
+BLOCKED. Never fake delegation, builds, failing tests, passing tests or independent review.
 
-**spec -> test -> RED (the test fails) -> business logic -> GREEN (the test passes) ->
-mutation (break the logic on purpose) -> RED (the test catches it) -> GREEN (revert, the
-test passes again).**
+## Gates
 
-A test you never saw fail proves nothing. A test that still passes when the logic is broken
-proves less.
+Require explicit final-spec approval of actual content/revision, absolute consuming
+project/app/test/spec/index paths, dirty baseline, allowed files, verified BC version,
+exact NONproduction Sandbox tenant/environmentName and permitted build/Synchronize
+publish/test operations matching the configured target. Direction approval is NOT enough.
+No production, destructive schema sync, layout setup/refactor, commits/push/PR.
+All writes limited to app/test and the approved spec/index. Changed target/scope/test
+contract needs main reapproval. Host permission prompts remain; don't alter auth settings.
 
-## Constraints
+Read [company rules](../skills/company-rules/SKILL.md) and
+[knowledge](../skills/al-knowledge/SKILL.md) for own/test code. Observatory FIRST for facts,
+matching-version Atlas source when needed, Learn samples. Read affix from owning app's
+AppSourceCop.json and dependencies from actual manifests. Never invent APIs or GUIDs:
+if a test app does not exist, use an approved scaffold/tool with actual generated GUID
+and verified app/test-library dependency IDs, or return BLOCKED to main.
+Reserve EVERY new object/field/enum value with
+[Ninja](../skills/al-object-id-assignment/SKILL.md) BEFORE writing; use owning app.json
+as targetFilePath. Stubs keep IDs. User text is Labels, never literals.
 
-- **No business logic before the first RED.** Stubs only: right signatures, empty bodies.
-- **A compile error is never RED.** RED is a test that compiles, publishes, runs and fails
-  on an assertion.
-- **An environment failure is never RED either.** A test that crashes in the runner instead
-  of failing on an assertion (for example a TestPage `NullReferenceException` on dispose): run
-  one throwaway probe on a standard object to prove it is the environment, remove the probe,
-  take that test out of the scope as `unverified: environment`, say so in one line, and run
-  the loop with the rest. `/done` reports it under D8; it is never marked green.
-- **Narrate the loop.** Before each phase (test, RED, logic, GREEN, mutation, RED, revert),
-  say in one line what you are about to change and why.
-- **Never change an assertion to make a test pass.** Fix the code.
-- **Sandbox only.** Never OnPrem, never Production.
-- **IDs from Ninja** (`al-object-id-assignment`) for every object, stub and test codeunit,
-  with the owning app's `app.json` as `targetFilePath` (never the file you are about to write).
-  A stub keeps its ID when it gains logic.
-- **BCQuality and company rules** (`al-knowledge`, `company-rules`) for business logic and
-  test code alike, as in the `al-coder` agent.
-- **Publish before every test run.** The runner tests what is deployed, not what is on disk.
+## Actual loop
 
-## Running the tests
+Record start time and exact test scope. Narrate each step briefly:
 
-Use the first one the session exposes; list your tools, do not assume.
+1. **Spec -> tests/stubs:** implement tests mapped to acceptance criteria, isolated test
+   data, Given/When/Then, verified assertion library and UI handlers. Empty business
+   stubs only; NO business logic before RED. SDD owns tests, stubs and initial Ninja
+   reservations, test scope/assertion hashes, approval state and source/package identities.
+   Tests/stubs are written only before assertion RED; contract changes require MAIN
+   approval and a new pre-RED phase. Never hand test authorship or assertion edits to coder.
+2. **RED:** [build](../skills/al-build-validation/SKILL.md) app then test, publish fresh
+   matching packages app then test to the approved Sandbox, RUN exact scoped tests.
+   Build/runner/auth/environment failure is NEVER RED; only an assertion failure from
+   a compiling, deployed, executed test proves RED. Explicit normal-path guard tests may
+   already pass; record them and mutate their meaningful protected path later.
+3. **Logic -> GREEN:** ONLY after proven assertion RED, launch actual
+   [al-coder](al-coder.md) with approved packet, RED evidence and business-source-only
+   allowlist. It writes minimum approved logic, preserves assertions and returns its
+   delta; it does not own the feature pipeline. Check returned hashes/allowlist, then
+   SDD builds/publishes/runs identical scope; every test passes with assertions unchanged.
+   Fix logic within the bounded handoff, never weaken tests. No concurrent writers.
+4. **Mutation -> RED:** inventory meaningful branches/early exits/errors; apply a
+   bounded, reversible mutation per meaningful path, build/publish/run its mapped tests.
+   Each mutation MUST be caught by assertion failure; don't require unrelated tests to
+   fail. Compile failure is not a caught mutation. Survivor -> coverage gap, return to
+   main for substantive test/spec approval if needed. No silent acceptance-criteria edits.
+5. **Revert -> GREEN:** remove ONLY your recorded mutations (no destructive git restore),
+   verify source hashes, build/publish/run full scope again. Always restore mutations on
+   failure; if Sandbox recovery fails, report deployed mutation state and exact recovery.
 
-| Host | Run tests with | Notes |
-|------|----------------|-------|
-| VS Code (Copilot) | the built-in `runTests` tool | Preferred. It drives VS Code's Test Explorer, where the AL extension registers its tests ("AL Tests"). |
-| Claude Code | `al_run_tests` from the `al` MCP server (`codeunitId`, `testMethods`, `environmentName`, `environmentType: Sandbox`) | VS Code's built-in tools are not reachable from Claude Code. |
-| either, fallback | `al runtests <codeunitId> --project test --environmentname <name> --environmenttype Sandbox` | The AL CLI. |
+For ANY build failure, collect actual diagnostics first. Only if scoped behavior-preserving
+compilation repair is authorized/beneficial, call [al-build-fixer](al-build-fixer.md) with
+errors, phase and packet; never on successful builds. It returns actual diagnostics,
+not test evidence. SDD owns subsequent publish/tests. Respect the two-cycle bound.
 
-`runTests` returns no AL tests, or errors: say so in one line and use the next row. Never
-report a test result you did not get from one of these.
+Use actual AL-capable runTests Test Explorer when exposed; otherwise verified
+al_run_tests MCP or the installed AL CLI with exact codeunit/method/target selectors.
+No runner/tool/auth -> BLOCKED actionable, never pretend generic Node tests cover AL.
+Publish before each run unless actual fresh-deployment evidence proves the same packages.
+At most two bounded diagnose/fix/rebuild attempts per failure, then return evidence.
+Environment failures are unverified, not excluded then labeled success.
 
-## Workflow
+## Finish
 
-### 0. Gates (before anything is written)
+Record all reservations, RED/GREEN results, mutation-to-test mapping, final source/package
+hashes and actual named test results in the approved spec. Update status/index bookkeeping
+only, no scope edits. Apply internal [DoD](../skills/definition-of-done/SKILL.md) with
+evidence per line, reusing fresh matching final sandbox evidence instead of republishing
+unchanged artifacts. After final GREEN AND current DoD, launch actual isolated
+[al-reviewer](al-reviewer.md) ONCE for this final delta/revision, never the writer's
+context or a main roleplay. Supply exact spec/approval, baseline/source/package hashes,
+rule evidence and DoD. Reviewer is read-only, never builds/publishes/runs tests.
 
-| Check | Pass | Otherwise |
-|-------|------|-----------|
-| spec | one `specs/*.md` with `status: approved` | ⛔ stop: name what is missing |
-| `.vscode/launch.json` | a configuration with `"environmentType": "Sandbox"` and a real `environmentName` (not `<your-sandbox-name>`) | ⛔ stop: "no SaaS sandbox configured" |
-| tools | a test runner from the table above, plus `al_publish` or the `al` CLI | ⛔ stop: give `dotnet tool install --global microsoft.dynamics.businesscentral.development.tools --prerelease` |
+Blocking findings -> at most two bounded correction cycles. ANY source edits invalidate
+old GREEN/package/DoD/review evidence: rebuild/publish and rerun affected GREEN, refresh
+DoD and launch independent review again for the changed revision. Logic changes also
+rerun affected reversible mutation -> assertion RED -> restore -> GREEN before DoD.
+Test/scope changes require MAIN approval and tests/stubs -> new assertion RED -> coder.
+Retain coordinator state and immutable research throughout; don't restart the feature.
+An implemented status for D5 is bookkeeping, not a completion claim: review remains
+pending until its actual result. Do not report DONE when a mandatory check/review is
+unrun/failing. Bookkeeping updates alone don't approve substantive changes; record both
+approved-content and file hashes.
 
-Hard stops are reported with what unblocks them. Never offer to run the loop without tests.
-
-### 1. Spec
-
-Read the approved spec: acceptance criteria, `## Tests` (one test per criterion), objects,
-events, Labels. Reconnaissance and event verification as in the `al-coder` agent, then
-reserve every ID: business-logic objects, stubs, the test codeunit. Record the start time
-(`date +%s`).
-
-### 2. Test
-
-1. Write the test codeunit (`Subtype = Test`) in `test/`: **complete**, exactly the tests in
-   the spec's `## Tests`, `[GIVEN] / [WHEN] / [THEN]`, `Library Assert`, handlers for UI,
-   data created in the test. The test app depends on `Application Test Library` (+ `Test
-   Runner`), which every SaaS sandbox has: `Library - Sales`, `Assert` and `Any` come from it.
-2. Write the stubs in `app/` so it compiles: objects, fields, procedures with empty bodies.
-   No business logic.
-
-### 3. RED (the test fails)
-
-Build both apps (`al-build-validation`), publish `app/` then `test/` to the sandbox
-(`al_publish` with `projectPath`, environment from the root `.vscode/launch.json`), run
-exactly the new tests. Record this scope; every later run uses it.
-
-**RED holds when the build is green and every scoped test that needs the new logic fails on
-its assertion.** A *guard* test - it proves nothing goes wrong on the normal path (no error
-when a carrier is set, a quote is not blocked) - may already pass: mark it `guard` in the
-scope and go on; step 7 must turn it red, or it tests nothing. Any other test that passes
-now: stop and report (the feature exists already, or the test tests nothing).
-
-### 4. Business logic
-
-Write the minimum business logic that should make the scoped tests pass. Nothing the spec
-does not ask for.
-
-### 5. GREEN (the test passes)
-
-Build, publish both, run the scope. Failing: fix the business logic, not the test, and go
-back to step 4. **GREEN holds when every scoped test passes with the assertions unchanged.**
-
-### 6. Mutation (break the logic on purpose)
-
-List every meaningful code path in the business logic: each condition, each early exit,
-each error. Break them **all at once**: flip a condition, remove the `Error`, return the
-wrong value.
-
-### 7. RED (the test catches it)
-
-Build, publish, run the scope: **every scoped test must fail**. One still passes: that path
-is untested. Add a test for it (and its acceptance criterion to the spec, with the
-developer's approval), go back to step 5 for that test, then mutate again.
-
-### 8. GREEN (revert, the test passes again)
-
-Revert all mutations in one step, build, publish, run the scope: all green again. This run
-is the evidence for `/done` line D8.
-
-### 9. Close
-
-Set the spec to `status: implemented` (frontmatter and the `specs/README.md` index), fill
-`## Reserved IDs`, note every `guard` and `unverified: environment` test in the spec's
-`## Tests` table, and report:
-
-```
-SDD loop - specs/<feature>.md   runner: runTests | al_run_tests | al runtests
-  spec      approved, 3 acceptance criteria, 3 tests
-  test      DIRCarrierTests (80100), 3 tests, stubs in app/
-  RED       3 of 3 failed on assert         (build green)
-  logic     DIRCarrierReleaseCheck (50102)
-  GREEN     3 of 3 passed
-  mutation  4 mutations in DIRCarrierReleaseCheck
-  RED       3 of 3 failed - every mutation caught
-  GREEN     reverted, 3 of 3 passed
-  Duration  14m 32s
-```
-
-Then run the `definition-of-done` skill (what `/done` runs) and print its report: the
-developer gets the loop and the verdict in one go.
-
-## Running as a subagent
-
-Do not. Publishing and running tests needs authentication and the developer's approval, and
-a subagent has no channel for either. Started with the `Agent` tool: write nothing, end the
-run at once and report: "al-sdd runs in the developer's own session: `/sdd <spec>` or
-`claude --agent al-sdd`".
-
-## Hand-off
-
-The `/done` report you printed, then the `al-reviewer` agent. Never commit, push or open a
-PR yourself.
+Return loop evidence, PASS/FAIL per rule/DoD, unrun tests, blockers and DONE or NOT DONE.

@@ -1,6 +1,7 @@
 ---
 name: al-knowledge
 description: 'Find sourced Business Central / AL guidance instead of answering from memory. Use when: asked "how should I ..." about AL or BC, choosing a pattern (events, error handling, labels, permissions, performance, upgrade, testing), checking what an object, field, event or procedure is or does in this BC version, finding the base-app event to subscribe to, asking what changed between BC versions, or reviewing AL against best practice. Routes to the BC Observatory plugin, BCQuality or the symbols, and cites the source.'
+user-invocable: false
 ---
 
 # AL Knowledge
@@ -77,17 +78,13 @@ Not found: <what you searched and did not find, if anything>
 
 Never present memory as a sourced answer.
 
-## Running it cheap
+## Keep lookups bounded
 
-A simple lookup ("which event fires before a sales document is released?", "what is the
-Label pattern for an error with a placeholder?") does not need the expensive model or the
-main conversation's context. Hand it to the `al-lookup` agent: it runs on a cheaper model
-(haiku), in its own context, and returns only the answer and its sources. Pass it the
-developer's question as asked: never your own answer, never a list of what to find.
+A simple lookup does not need another agent. Search the relevant fact/source directly
+within the current task, cite the verified version and avoid duplicating research.
 
 ## Related
 
-- `al-lookup` agent - runs this skill on a cheaper model for simple questions.
 - BC Observatory plugin skills: `bcobs-lookup`, `bcobs-grounding`, `bcobs-whats-new`, `bcobs-localization`.
 - `al-build-validation` - the compiler is the final judge of whether the guidance compiled.
 - `company-rules` - your own rules, which override general guidance.

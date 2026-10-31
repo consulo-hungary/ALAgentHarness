@@ -1,0 +1,13 @@
+{
+  "name": "al-agent-harness",
+  "version": "2.1.0",
+  "description": "Four AL commands: safe workspace setup, code-first refactoring, Opus brainstorming with approved SDD, and logical local commits.",
+  "author": { "name": "waldo & AJ" },
+  "repository": "https://github.com/waldo1001/DirectionsEmea.ALAgentHarness",
+  "license": "MIT",
+  "agents": "copilot/agents/",
+  "skills": "skills/",
+  "commands": "commands/",
+  "hooks": "copilot/hooks.json",
+  "mcpServers": ".mcp.json"
+}

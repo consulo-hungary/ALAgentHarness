@@ -14,7 +14,9 @@ believe in, delete the rest.
 
 ## What is in here
 
-Three parts, one commit per step, a branch and a tag per step.
+Historical demo: three parts, one commit per step, a branch and a tag per step.
+These tagged steps retain the original commands; the current plugin has the four focused
+commands documented below.
 
 | Part | Step | Branch / tag | Adds |
 |------|------|--------------|------|
@@ -56,7 +58,7 @@ claude plugin install al-agent-harness@al-agent-harness   # brings bc-observator
 | AL Object ID Ninja | object ID reservations | MCP server via `.mcp.json` (npx, nothing to install); VS Code extension `vjeko.vjeko-al-objid` optional |
 | BCQuality | curated BC/AL knowledge and the `al-code-review` skill | in Claude Code: `/plugin marketplace add microsoft/BCQuality` then `/plugin install bcquality@bcquality` |
 | A BC SaaS sandbox | publishing and running tests | fill `environmentName` in `.vscode/launch.json` |
-| GitHub CLI | `/pr` opens the pull request | <https://cli.github.com>, then `gh auth login` |
+| Git | `/AL-commit` creates local logical commits | Install Git and configure your own repository identity; no push is implied |
 
 ## Clone it
 
@@ -87,9 +89,85 @@ The carrier task used in both demo runs is in `docs/TASK.md`. The full talk flow
 1. Change the affix in `app/AppSourceCop.json` and the ranges in `app.json` / `.objidconfig`
    (or point the harness at your own app folders and delete `app/` and `test/`).
 2. Empty `rules/` and write your own rules: one short article plus a `.good.al` and a
-   `.bad.al` per rule. The company rules skill and `/done` pick them up automatically.
+   `.bad.al` per rule. The company rules skill and internal DoD pick them up automatically.
 3. Read `AGENTS.md` and delete every line you do not believe in. Keep it short.
-4. Replace `/pr` with whatever talks to your shop (GitHub, Azure DevOps, Jira, ...).
+4. Keep `/AL-commit` focused on local commits; integrate your shop's PR tooling separately.
 5. Switching tools is mechanical: `AGENTS.md`, `rules/`, `specs/` and the skills are shared
    markdown. Only agents, commands, MCP config and hooks are tool-specific. See
    `docs/PORTING.md`.
+
+## Four focused commands
+
+The plugin provides only these four command entry points. Each acts on the active
+workspace, not the repository containing an attached command. The contract is recorded
+in [specs/2-focused-commands.md](specs/2-focused-commands.md).
+
+| Command | Does | Does not |
+|---------|------|----------|
+| `/AL-start` | Shallow setup inspection; create the standard folders, move existing project files without changing AL content, update necessary path references and missing local instructions. | Review code, implement features, generate AL or deploy. |
+| `/AL-refactor` | Inspect existing code deeply, list sourced findings, fix verified behavior-preserving inconsistencies in existing files and validate. | Normalize folders, create a feature spec, silently merge different event/trigger semantics or upgrade BC. |
+| `/AL-brainstorm` | Launch an Opus brainstorming agent, clarify the feature, draft a numbered spec and start SDD after explicit final-spec/sandbox approval. | Silently substitute a different model, implement before approval or deploy to production. |
+| `/AL-commit` | Review uncommitted changes for grouping and create short meaningful local commits with explicit staging. | Edit code, perform a broad refactor, include secrets, rewrite history, push or create a PR. |
+
+Startup and safe refactor fixes do not require the old multi-stage brainstorm/spec pipeline.
+Only new-feature brainstorming continues into SDD. Required host permissions and real
+ambiguities still apply. Missing validation is reported, not converted into success.
+
+### Focused internal specialists
+
+The four public commands use internal agents only when their phase needs them:
+
+| Agent | Responsibility |
+|-------|----------------|
+| `al-spec` | Write the agreed numbered draft and index; main chat obtains final approval. |
+| `al-coder` | Implement approved logic after an executed assertion failure proves RED. |
+| `al-build-fixer` | Diagnose compilation failures with bounded, behavior-preserving fixes; not run on successful builds. |
+| `al-reviewer` | Independent read-only review of the final validated delta; never review its own edits. |
+| `al-sdd` | Coordinate tests/stubs, RED, implementation, GREEN, reversible mutation, RED, restore and final GREEN. |
+
+SDD carries the same approved scope and source/package/test evidence across actual
+handoffs. Final review is independent; any subsequent edits require fresh validation
+and review. Refactoring can use build-failure support and final delta review without
+entering a feature-spec/SDD pipeline. Setup and commit grouping do not launch these roles.
+
+`AL-start` standardizes consuming AL workspaces to:
+
+```text
+app/                 Application project
+test/                Test application
+docs/                Maintained documentation
+docs/specs/          Feature contracts
+docs/generated/      Requested reusable AI reports (for example Excel or HTML)
+```
+
+Existing projects using `specs/` remain readable until setup safely migrates them. Where
+both spec roots contain conflicting content, the workflow must not silently overwrite it. Setup
+must update affected tasks, CI, launch settings, dependencies and documentation links.
+Project-owned instructions and Definition of Done remain authoritative.
+Creating an empty `test/` directory does not invent a test app or prove tests ran.
+
+New specification names are numbered: `1-project-create.md`, `2-carrier-validation.md`,
+`3-next-feature.md`. Allocate the next number above the highest existing numeric prefix;
+do not reuse holes or sort `10` before `2`. Templates and indexes are excluded.
+
+### Use with Copilot
+
+In a terminal at this repository root, with standalone Copilot CLI installed:
+
+```powershell
+copilot plugin install ".\plugin"
+copilot plugin list
+```
+
+For VS Code, use **Chat: Install Plugin from Source** and select the local `plugin`
+directory. Enable it for the intended harness, then start a fresh chat and use slash
+autocomplete to find **AL-start**, **AL-refactor**, **AL-brainstorm** or **AL-commit**. Use the namespace shown by
+your host if it does not expose a bare command. Do not use `!AL-refactor`: `!` can
+mean shell execution rather than a plugin command.
+
+Brainstorming explicitly requires an available Opus model and actual agent invocation.
+If the host cannot provide it, report that capability gap rather than substituting.
+Other command agents inherit the host's model choice. Explicit commands keep the task
+boundary clear and avoid spending credits on unrelated phases.
+See [plugin/README.md](plugin/README.md) for workflow details and smoke tests, and
+[docs/PORTING.md](docs/PORTING.md) for compatibility.
