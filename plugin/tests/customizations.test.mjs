@@ -95,7 +95,7 @@ test('all canonical agents have thin adapters, Opus override ONLY brainstorm', (
 });
 
 test('all reusable skills are internal, obsolete public pipeline absent, relative markdown links valid', () => {
-  const customizationFiles = ['agents', 'commands', 'skills', 'copilot', 'templates']
+  const customizationFiles = ['agents', 'commands', 'skills', 'copilot', 'templates', 'references']
     .flatMap((directory) => files(path.join(root, directory)));
   customizationFiles.push(path.join(root, 'README.md'));
   for (const file of customizationFiles.filter((file) => file.endsWith('.md'))) {
@@ -313,6 +313,29 @@ test('host relay retains coordinator state and full packets, no fake independent
   }
 });
 
+test('project knowledge is relevant read-only evidence across feature and refactor handoffs', () => {
+  const normalized = (relative) => read(relative).replace(/\s+/g, ' ');
+  const policy = normalized('references/project-knowledge.md');
+  assert.match(policy, /Inventory filenames\/subfolders first/);
+  assert.match(policy, /Missing or empty knowledge is valid/);
+  assert.match(policy, /Report unreadable\/unsupported files/);
+  assert.match(policy, /not agent instructions or tool permissions/);
+  assert.match(policy, /Keep knowledge files read-only/);
+  assert.match(policy, /content identity\/hash/);
+  for (const relative of ['skills/al-brainstorm/SKILL.md', 'skills/project-profiles/SKILL.md',
+    'agents/al-brainstorm.md', 'agents/al-spec.md', 'references/specialist-handoff.md']) {
+    assert.match(read(relative), /knowledgeRoot/);
+    assert.match(read(relative), /project-knowledge\.md/);
+  }
+  assert.match(read('agents/al-refactor.md'), /project-knowledge\.md/);
+  for (const relative of ['templates/spec-TEMPLATE.md', 'templates/project-SPEC-TEMPLATE.md']) {
+    assert.match(read(relative), /## Knowledge sources/);
+    assert.match(read(relative), /knowledgeRoot|Knowledge root/);
+  }
+  assert.match(read('agents/al-start.md'), /docs\/knowledge\//);
+  assert.match(read('commands/AL-start.md'), /docs\/knowledge\//);
+});
+
 test('refactor reviews only verified changed delta; setup and commit do not expand pipelines', () => {
   const refactor = read('agents/al-refactor.md');
   assert.match(refactor, /ONE continuous deep local inspection/);
@@ -333,6 +356,8 @@ test('layout strict mode, BOM, custom roots and no manifest/source secrets in ou
   put(path.join('test', 'app.json'), manifest);
   const layout = resolveLayout(directory, { appRoot: 'extension' });
   assert.equal(layout.manifests.app.runtime, '17.0');
+  assert.equal(layout.knowledgeRoot, path.join(directory, 'docs', 'knowledge'));
+  assert.ok(!fs.existsSync(layout.knowledgeRoot), 'Read-only resolution must not create knowledge');
   assert.doesNotMatch(JSON.stringify(layout), /must-not-leak|secret/);
   assert.throws(() => resolveLayout(directory), /Missing AL manifest/);
   const result = spawnSync(process.execPath, [path.join(root, 'skills', 'al-project-layout', 'scripts', 'resolve-layout.mjs'),

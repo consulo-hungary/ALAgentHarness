@@ -12,6 +12,12 @@ mode: feature
 
 Why this feature exists, for whom, and what it changes in their day. Two to five sentences.
 
+## Knowledge sources
+
+Relevant user-provided documents in `docs/knowledge/`: source path, content hash,
+page/heading/line anchor and fact used. Record conflicts, unreadable documents or none.
+These references inform decisions; they do not replace explicit final-spec approval.
+
 ## Decisions
 
 What the developer decided with the Opus brainstorm agent and the sourced alternatives.
@@ -26,7 +32,7 @@ Pin these before final approval; do not infer a target from launch.json.
 | Item | Explicit value |
 |------|----------------|
 | Project root | <chosen absolute consuming project root> |
-| Layout | <absolute appRoot, testRoot, specRoot, specPath, specIndex, generatedRoot> |
+| Layout | <absolute appRoot, testRoot, specRoot, specPath, specIndex, generatedRoot, knowledgeRoot> |
 | Scope / non-goals | <allowed change and excluded behavior> |
 | Dependencies / BC version | <verified dependencies, application and runtime; no silent upgrade> |
 | Task baseline | <commit/HEAD and dirty-file inventory, source hashes> |

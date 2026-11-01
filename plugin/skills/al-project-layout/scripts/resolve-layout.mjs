@@ -50,6 +50,7 @@ export function resolveLayout(projectRoot, options = {}) {
     projectRoot: root, appRoot, testRoot, specRoot,
     specIndex: path.join(specRoot, 'README.md'),
     generatedRoot: within(root, path.join('docs', 'generated')),
+    knowledgeRoot: within(root, path.join('docs', 'knowledge')),
     manifests: { app: manifest(appRoot), test: testMissing ? null : manifest(testRoot) },
     ...planning,
   };

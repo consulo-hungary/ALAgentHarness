@@ -3,7 +3,8 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { workspaceRoot, inside } from './workspace-paths.mjs';
 
-const directories = ['app', 'test', 'docs', path.join('docs', 'specs'), path.join('docs', 'generated')];
+const directories = ['app', 'test', 'docs', path.join('docs', 'specs'),
+  path.join('docs', 'generated'), path.join('docs', 'knowledge')];
 const emptySourceDirectories = ['PageExtensions', 'TableExtension'];
 const digest = (file) => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 

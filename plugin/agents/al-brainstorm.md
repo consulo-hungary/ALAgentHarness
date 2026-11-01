@@ -13,6 +13,9 @@ Main owns interactive questions, draft persistence and approval. Retain/resume t
 agent's context where supported; do not reload research on every answer.
 
 Resolve the active target using [project profiles](../skills/project-profiles/SKILL.md).
+Read relevant documents from the supplied `knowledgeRoot` (`docs/knowledge/`) following
+[project knowledge reading](../references/project-knowledge.md). Return cited source
+identities, extracted facts, conflicts and unreadable-file gaps with the direction.
 Inspect relevant project instructions, manifests, project code and available authoritative
 sources only. For AL, load [company rules](../skills/company-rules/SKILL.md) and
 [AL knowledge](../skills/al-knowledge/SKILL.md), grounding BC claims in Observatory,

@@ -8,6 +8,9 @@ user-invocable: false
 
 Use before drafting or implementing a new feature in the active workspace. The installed
 plugin path is never the target. Resolve once and pass the result to every specialist.
+Pin `knowledgeRoot` to the active workspace's `docs/knowledge/` and follow
+[project knowledge reading](../../references/project-knowledge.md): inventory first,
+read relevant user-provided references, preserve them and pass cited evidence/gaps.
 
 ## Detect from repository evidence
 

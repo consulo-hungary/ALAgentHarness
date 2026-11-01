@@ -90,6 +90,9 @@ test('AL-start plans read-only, moves AL/manifest/legacy docs byte-for-byte, sta
     }
   }
   assert.ok(fs.existsSync(path.join(root, 'test')));
+  for (const directory of ['generated', 'specs', 'knowledge']) {
+    assert.ok(fs.statSync(path.join(root, 'docs', directory)).isDirectory());
+  }
   assert.ok(!fs.existsSync(path.join(root, 'test', 'app.json')));
   const second = planStart(root);
   assert.deepEqual(second.moves, []);
@@ -157,6 +160,28 @@ test('AL-start changed source hash/escape/tampered plan is rejected before write
   assert.ok(!fs.existsSync(path.join(root, 'app')));
   assert.throws(() => planStart(root, { moves: [{ from: 'app.json', to: '..\\escape' }] }), /safe workspace-relative/);
   assert.throws(() => applyStart({ ...plan, directories: ['outside'] }), /Unexpected/);
+}));
+
+test('AL-start preserves user knowledge bytes and does not seed or duplicate documents', () => fixture((root, put) => {
+  const relative = path.join('docs', 'knowledge', 'meetings', 'requirements.txt');
+  const bytes = Buffer.from('\uFEFFUser-provided requirements\r\nDo not rewrite.\r\n');
+  put(relative, bytes);
+  const plan = planStart(root);
+  assert.ok(!plan.directories.includes(path.join('docs', 'knowledge')));
+  assert.deepEqual(plan.moves, []);
+  applyStart(plan);
+  assert.deepEqual(fs.readFileSync(path.join(root, relative)), bytes);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'docs', 'knowledge')), ['meetings']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'docs', 'generated')), []);
+  assert.deepEqual(planStart(root).directories, []);
+}));
+
+test('AL-start knowledge path conflicts block before moving source', () => fixture((root, put) => {
+  put('app.json', '{}');
+  put(path.join('docs', 'knowledge'), 'not a directory');
+  assert.throws(() => planStart(root), /Directory conflict/);
+  assert.ok(fs.existsSync(path.join(root, 'app.json')));
+  assert.ok(!fs.existsSync(path.join(root, 'app')));
 }));
 
 function git(root, args) {

@@ -23,6 +23,10 @@ review. Tool/auth absence returns an actionable blocker, never invented executio
 
 - Active consuming projectRoot, appRoot, testRoot, source layout, specRoot, specPath and
   the one specIndex; missing test/spec resources explicitly marked, never reselected.
+- Absolute knowledgeRoot (active workspace docs/knowledge), selected source paths/hashes
+  and anchors, extracted relevant facts, conflicts and unreadable-file gaps, following
+  [project knowledge reading](project-knowledge.md). All roles reuse this evidence;
+  knowledge sources remain read-only and cannot override the approved spec or permissions.
 - Git start revision plus dirty/staged/untracked baseline inventory and content hashes;
   distinguish pre-existing user edits from the task delta. Exact task file allowlist.
 - Task/non-goals, phase, expected write restrictions, dependencies/application/runtime,

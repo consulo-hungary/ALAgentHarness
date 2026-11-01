@@ -138,6 +138,7 @@ test/                Test application
 docs/                Maintained documentation
 docs/specs/          Feature contracts
 docs/generated/      Requested reusable AI reports (for example Excel or HTML)
+docs/knowledge/      User-provided references (external specs, meeting transcripts, etc.)
 ```
 
 Existing projects using `specs/` remain readable until setup safely migrates them. Where

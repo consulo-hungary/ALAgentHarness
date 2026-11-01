@@ -14,7 +14,12 @@ creation, SDD, tests, publish, staging or commits. Invocation is setup authoriza
    manifests; infer a single app and its existing test app from actual manifests and
    dependencies, not names alone. Ambiguous multiproject or contradictory instructions:
    return `QUESTION` to main before writes. Never guess a GUID/dependency or alter a manifest.
-2. Plan `app/`, `test/`, `docs/`, `docs/specs/`, `docs/generated/`. `app/` and `test/`
+2. Plan `app/`, `test/`, `docs/`, `docs/specs/`, `docs/generated/`, `docs/knowledge/`.
+   `docs/knowledge/` holds user-provided project references (external specs, meeting
+   transcripts and supporting documents). Create it if missing; preserve existing contents,
+   do not seed it with AI reports or move arbitrary documents into it. Setup does not
+   analyze these documents; later workflows read relevant material.
+   `app/` and `test/`
    are the project boundaries: every production AL object/source belongs under the owning
    app project; test-only AL objects belong under the owning test project. A folder named
    `PageExtensions` or `TableExtension` is NOT a project boundary and must not remain as

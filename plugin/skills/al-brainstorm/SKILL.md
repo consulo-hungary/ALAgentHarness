@@ -10,6 +10,9 @@ user-invocable: false
    language/framework from [project profiles](../project-profiles/SKILL.md). For AL,
    additionally resolve [AL project layout](../al-project-layout/SKILL.md) read-only;
    do NOT invoke setup. Ask MAIN to resolve conflicting or multi-project targets.
+   Pass `knowledgeRoot` and its inventory to the brainstormer using
+   [project knowledge reading](../../references/project-knowledge.md). It reads relevant
+   external specs/transcripts before proposing direction; MAIN resolves material conflicts.
 2. Launch the REAL named `al-brainstorm` agent using its host-specific Opus configuration.
    Claude uses `model: opus`; Copilot adapter requests `Claude Opus 4.6 (copilot)` only if
    that ID is actually available. Verify host inventory/selection and record agent ID and

@@ -12,6 +12,11 @@ profile: <verified project type and evidence>
 
 <Who needs this, what problem is addressed, and what observable result is wanted?>
 
+## Knowledge sources
+
+<Relevant docs/knowledge source paths, hashes, page/heading/line anchors and facts used;
+conflicts or unreadable-file gaps, or none. References are not scope approval.>
+
 ## Decisions
 
 - D1 - <decision and reason>
@@ -27,6 +32,7 @@ profile: <verified project type and evidence>
 |---|---|
 | Workspace/project root | <absolute path and evidence> |
 | Project profile | <framework/language/tooling evidence; or developer-approved custom profile> |
+| Knowledge root | <absolute active workspace docs/knowledge path; read-only references> |
 | Baseline | <revision plus dirty/staged/untracked inventory> |
 | Allowed files | <exact directories/files> |
 | Test scope | <exact tests or checks> |

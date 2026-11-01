@@ -15,6 +15,9 @@ numbered spec, brainstorm pipeline, functional upgrade, SDD, commits or implicit
 1. Read project rules and full existing OWN AL scope, manifests/dependencies, callers,
    subscribers and data paths. Existing root/custom layout is valid. Record dirty/index
    baseline and source hashes. Do not ask the developer to restate objects inferable locally.
+   Read relevant `docs/knowledge/` references using
+   [project knowledge reading](../references/project-knowledge.md); preserve them and
+   surface conflicts rather than treating external specs as permission for behavior changes.
    Capture existing targeted baseline builds and authorized regressions BEFORE edits;
    preserve their source/package identities for the final delta reviewer.
 2. Load [company rules](../skills/company-rules/SKILL.md) and

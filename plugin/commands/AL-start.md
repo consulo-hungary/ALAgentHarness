@@ -6,6 +6,8 @@ argument-hint: "[optional explicit workspace root]"
 Target the ACTIVE WORKSPACE/session working directory by default, NOT this tagged plugin
 resource path. Invoke ONE actual `al-start` agent with [canonical instructions](../agents/al-start.md).
 Invocation authorizes safe setup; no repeated direction or final-spec approvals.
+Create missing `docs/generated/`, `docs/specs/` and `docs/knowledge/` directories;
+preserve existing knowledge documents without analyzing or rewriting them during setup.
 Ambiguous projects, overwrite conflicts or contradictory project instructions require main
 clarification. Never migrate this harness plugin repository. No AL edits, specs, tests,
 publish, ID reservations, staging or commits.

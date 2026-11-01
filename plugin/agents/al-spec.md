@@ -11,6 +11,9 @@ Require MAIN's agreed direction and reused Opus context/source evidence before a
 No interactive questions, approval, AL, IDs, builds, tests, publish or nested agents.
 Do not research the feature again. Genuine gaps -> return numbered questions to MAIN;
 never guess a decision. One invocation normally produces the complete draft and index.
+Reuse the supplied `knowledgeRoot` evidence following
+[project knowledge reading](../references/project-knowledge.md). Cite the external
+specs/transcripts that informed decisions; reference documents do not approve the draft.
 
 Resolve the project profile and one active spec root from the supplied packet; never
 reselect a different workspace. Use its existing TEMPLATE.md when present. Otherwise use
