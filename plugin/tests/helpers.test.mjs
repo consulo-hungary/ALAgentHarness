@@ -8,6 +8,7 @@ import test from 'node:test';
 import { numberedSpecs, createNumberedSpec } from '../scripts/numbered-specs.mjs';
 import { planStart, applyStart } from '../scripts/start-layout.mjs';
 import { inspectGroup, commitGroup } from '../scripts/commit-group.mjs';
+import { resolveOpusModel } from '../scripts/opus-model.mjs';
 
 const testsRoot = fileURLToPath(new URL('./', import.meta.url));
 const specRoot = path.join('docs', 'specs');
@@ -21,6 +22,44 @@ function fixture(callback) {
   try { callback(root, put); } finally { fs.rmSync(root, { recursive: true, force: true }); }
 }
 const sha = (data) => createHash('sha256').update(data).digest('hex');
+
+test('Opus family resolves newest available SDK or picker ID without changing its spelling', () => {
+  const sdk = ['claude-sonnet-5.5', 'claude-haiku-5.5', 'claude-opus-4.8', 'claude-opus-5.5'];
+  assert.equal(resolveOpusModel(sdk), 'claude-opus-5.5');
+  assert.equal(resolveOpusModel(['Claude Opus 4.6 (copilot)', 'Claude Opus 5.5 (copilot)']),
+    'Claude Opus 5.5 (copilot)');
+  assert.equal(resolveOpusModel(['claude-opus-5.9', 'claude-opus-5.10', 'claude-opus-6']),
+    'claude-opus-6');
+  assert.equal(resolveOpusModel(['claude-opus-5.9', 'claude-opus-5.10']), 'claude-opus-5.10');
+  assert.equal(resolveOpusModel(['claude-opus-5.5', 'claude-opus-5.6']), 'claude-opus-5.6');
+  assert.deepEqual(sdk, ['claude-sonnet-5.5', 'claude-haiku-5.5', 'claude-opus-4.8', 'claude-opus-5.5']);
+});
+
+test('Opus ties are inventory-order independent and only exact family IDs qualify', () => {
+  const ids = ['claude-opus-5.5-long', 'claude-opus-5.5-b', 'claude-opus-5.5-a'];
+  assert.equal(resolveOpusModel(ids), 'claude-opus-5.5-a');
+  assert.equal(resolveOpusModel([...ids].reverse()), 'claude-opus-5.5-a');
+  assert.equal(resolveOpusModel([...ids, 'claude-opus-5.5']), 'claude-opus-5.5');
+  for (const inventory of [[], ['opus'], ['claude-sonnet-5.5', 'claude-haiku-5.5'],
+    ['not-claude-opus-5.5', 'claude-opus-5.5fake']]) {
+    assert.throws(() => resolveOpusModel(inventory), /BLOCKED: Opus unavailable/);
+  }
+  for (const inventory of [null, {}, 'opus', [''], [42]]) {
+    assert.throws(() => resolveOpusModel(inventory), /Model inventory must/);
+  }
+  assert.throws(() => resolveOpusModel(['claude-opus-9007199254740992']), /Invalid Opus version/);
+});
+
+test('Opus CLI returns exact ID and fails explicitly when unavailable', () => {
+  const script = fileURLToPath(new URL('../scripts/opus-model.mjs', import.meta.url));
+  const success = spawnSync(process.execPath, [script, JSON.stringify(['claude-opus-5.5'])], { encoding: 'utf8' });
+  assert.equal(success.status, 0, success.stderr);
+  assert.equal(JSON.parse(success.stdout), 'claude-opus-5.5');
+  const failure = spawnSync(process.execPath, [script, '["claude-haiku-5.5"]'], { encoding: 'utf8' });
+  assert.notEqual(failure.status, 0);
+  assert.match(failure.stderr, /BLOCKED: Opus unavailable/);
+  assert.equal(failure.stdout, '');
+});
 
 test('numbered specs sort 1,2,10 numerically, preserve mixed names and choose max+1 across gaps', () => fixture((root, put) => {
   for (const name of ['README.md', 'TEMPLATE.md', 'legacy.md', '1-one.md', '2-two.md', '10-ten.md', '0-ignored.md']) {

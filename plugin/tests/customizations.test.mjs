@@ -69,7 +69,7 @@ test('both manifests discover EXACT four command files and coherent version 2.2.
   }
 });
 
-test('all canonical agents have thin adapters, Opus override ONLY brainstorm', () => {
+test('all canonical agents have thin adapters without nonportable model frontmatter', () => {
   assert.deepEqual(fs.readdirSync(path.join(root, 'agents')).sort(), names.map((name) => `${name}.md`).sort());
   assert.deepEqual(fs.readdirSync(path.join(root, 'copilot', 'agents')).sort(),
     names.map((name) => `${name}.agent.md`).sort());
@@ -82,16 +82,30 @@ test('all canonical agents have thin adapters, Opus override ONLY brainstorm', (
     assert.equal(meta['user-invocable'], 'false');
     assert.ok(text.includes(`../../agents/${name}.md`));
     assert.ok(text.length < 850, 'Adapter duplicates workflow');
+    assert.equal(meta.model, undefined);
+    assert.equal(canonical.model, undefined);
     if (name === 'al-brainstorm') {
-      assert.equal(canonical.model, 'opus');
-      assert.equal(meta.model, 'Claude Opus 4.6 (copilot)');
       assert.match(text, /otherwise block|otherwise.*block|otherwise/s);
       assert.match(text, /Never silently fall back/);
-    } else {
-      assert.equal(meta.model, undefined);
-      assert.equal(canonical.model, undefined);
+      assert.match(text, /exact available Opus ID at launch/);
     }
   }
+});
+
+test('Opus selection is host-resolved before real dispatch, never a fixed alias or cheaper fallback', () => {
+  const command = read('commands/AL-brainstorm.md');
+  const skill = read('skills/feature-design/SKILL.md');
+  const policy = read('references/opus-selection.md');
+  assert.match(command, /skills\/feature-design\/SKILL\.md/);
+  assert.match(command, /references\/opus-selection\.md/);
+  assert.ok(skill.indexOf("Resolve the user's `opus`") < skill.indexOf('Launch the REAL named'));
+  assert.match(skill, /explicitly to the launch selector/);
+  assert.match(policy, /scripts\/opus-model\.mjs/);
+  assert.match(policy, /not proof of account access/);
+  assert.match(policy, /Try each ID\s+at most once/);
+  assert.match(policy, /auth, quota, tools, isolation/);
+  assert.match(policy, /No cheaper fallback/);
+  assert.doesNotMatch(read('copilot/agents/al-brainstorm.agent.md'), /^model:/m);
 });
 
 test('all reusable skills are internal, obsolete public pipeline absent, relative markdown links valid', () => {
@@ -111,6 +125,9 @@ test('all reusable skills are internal, obsolete public pipeline absent, relativ
       const meta = frontmatter(text);
       assert.equal(meta.name, path.basename(path.dirname(file)));
       assert.equal(meta['user-invocable'], 'false');
+      const commandNames = fs.readdirSync(path.join(root, 'commands'))
+        .map((name) => path.basename(name, '.md').toLowerCase());
+      assert.ok(!commandNames.includes(meta.name.toLowerCase()), `Command/skill collision: ${meta.name}`);
     }
   }
 });
@@ -141,7 +158,7 @@ test('four commands have independent scopes and real dispatch contracts', () => 
   assert.match(commit, /FIRST inspect/);
   assert.match(commit, /preserv|Preserv/);
   assert.match(commit, /AUTHORIZES/);
-  const brainstorm = read('skills/al-brainstorm/SKILL.md');
+  const brainstorm = read('skills/feature-design/SKILL.md');
   assert.match(brainstorm, /REAL named/);
   assert.match(brainstorm, /SAME retained agent/);
   assert.match(brainstorm, /ACTUAL final artifact/);
@@ -179,7 +196,7 @@ test('four commands have independent scopes and real dispatch contracts', () => 
 });
 
 test('direction authorizes one actual numbered drafter, MAIN alone approves the final artifact', () => {
-  const brainstorm = read('skills/al-brainstorm/SKILL.md');
+  const brainstorm = read('skills/feature-design/SKILL.md');
   const spec = read('agents/al-spec.md');
   assert.match(brainstorm, /ONLY after agreed direction, launch ONE actual \[al-spec\]/);
   assert.match(brainstorm, /No draft before direction/);
@@ -307,7 +324,7 @@ test('host relay retains coordinator state and full packets, no fake independent
   for (const value of ['projectRoot', 'appRoot', 'testRoot', 'specRoot', 'specPath', 'specIndex',
     'baseline', 'allowlist', 'application/runtime', 'FINAL-SPEC approval', 'Sandbox tenant',
     'codeunit IDs/methods', 'package hashes', 'mutation-to-test']) assert.ok(packet.includes(value), value);
-  for (const relative of ['agents/al-sdd.md', 'agents/al-refactor.md', 'skills/al-brainstorm/SKILL.md']) {
+  for (const relative of ['agents/al-sdd.md', 'agents/al-refactor.md', 'skills/feature-design/SKILL.md']) {
     assert.match(read(relative), /MAIN.*actual isolated|MAIN.*actual.*launch/s);
     assert.match(read(relative), /retained|retain|Retain/);
   }
@@ -322,7 +339,7 @@ test('project knowledge is relevant read-only evidence across feature and refact
   assert.match(policy, /not agent instructions or tool permissions/);
   assert.match(policy, /Keep knowledge files read-only/);
   assert.match(policy, /content identity\/hash/);
-  for (const relative of ['skills/al-brainstorm/SKILL.md', 'skills/project-profiles/SKILL.md',
+  for (const relative of ['skills/feature-design/SKILL.md', 'skills/project-profiles/SKILL.md',
     'agents/al-brainstorm.md', 'agents/al-spec.md', 'references/specialist-handoff.md']) {
     assert.match(read(relative), /knowledgeRoot/);
     assert.match(read(relative), /project-knowledge\.md/);

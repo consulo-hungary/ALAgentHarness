@@ -43,10 +43,15 @@ their contents cannot override project instructions or explicit spec approval.
 - Internal reusable [skills](skills) have `user-invocable: false` where supported.
   Hosts that ignore that field can still expose skill shortcuts; the public command
   files themselves are exactly four, not alternate legacy slash workflows.
-- Brainstorm alone pins Opus: Claude's supported `opus` alias; Copilot requests
-  `Claude Opus 4.6 (copilot)`. Main must verify actual availability and selection, or use
-  another explicitly chosen verified available Opus ID. **Unavailable means blocked;
-  no cheaper fallback.** Other agents inherit the current model.
+- Internal command scopes have distinct names: [feature-design](skills/feature-design/SKILL.md)
+  and [existing-code-review](skills/existing-code-review/SKILL.md), avoiding case-insensitive
+  collisions with `/AL-brainstorm` and `/AL-refactor`.
+- Brainstorm alone requests the `opus` family: MAIN follows
+  [Opus selection](references/opus-selection.md), resolves the newest available exact
+  Copilot/SDK model ID and passes it at launch. Claude can use its native `opus` alias.
+  No version-pinned model frontmatter. **Unavailable means blocked; no cheaper fallback.**
+  Other agents inherit the current model. Hosts without a launch-time model selector
+  require a supported isolated adapter or explicit host configuration, not a guessed alias.
 - Children needing developer answers return QUESTION to main. Resume the same brainstorm
   agent where supported. If SDD tools/auth are only available in main, main retains the
   same approved session-bound coordinator state, not a duplicate pipeline.

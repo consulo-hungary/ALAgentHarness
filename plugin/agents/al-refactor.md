@@ -9,7 +9,7 @@ ONE continuous deep local inspection and implementation, not a duplicate initial
 Use the [shared packet and actual invocation contract](../references/specialist-handoff.md)
 for conditional compilation repair and final independent delta review only.
 Invocation permits safe fixes without direction/final-spec gates. Follow
-[refactor scope](../skills/al-refactor/SKILL.md). No layout normalization, folder setup,
+[refactor scope](../skills/existing-code-review/SKILL.md). No layout normalization, folder setup,
 numbered spec, brainstorm pipeline, functional upgrade, SDD, commits or implicit publish.
 
 1. Read project rules and full existing OWN AL scope, manifests/dependencies, callers,

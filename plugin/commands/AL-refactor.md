@@ -6,7 +6,7 @@ argument-hint: "[existing AL scope or refactor goal]"
 Target the active workspace/session working directory, NOT the directory containing this
 tagged command. No input: inspect the existing own AL scope and infer safe inconsistencies.
 Invoke ONE actual `al-refactor` agent using [canonical instructions](../agents/al-refactor.md)
-and [scope contract](../skills/al-refactor/SKILL.md). Inherit the session model.
+and [scope contract](../skills/existing-code-review/SKILL.md). Inherit the session model.
 Invocation authorizes safe existing-file fixes, not new artifacts, layout normalization,
 functional changes, sandbox publishing, or commits. Return uncertainties to main.
 Keep initial inspection/fixing continuous; conditional al-build-fixer only on compile
