@@ -57,3 +57,8 @@ user-invocable: false
 Feature writes are limited to app/test and the exact spec/index. No layout migrations,
 commits/push/PR, speculative IDs or extra artifacts. MAIN returns blockers rather than
 allowing an isolated child to guess developer decisions.
+
+MCP failures follow the [MCP failure policy](../../references/mcp-failure-policy.md): a child
+returns `QUESTION: MCP <server> failed 3x`, MAIN asks the user (Retry / Continue without
+<server> / Stop) in the question dialog and relays the answer to the same child. No child
+or MAIN may compensate by downloading, unzipping or browsing base-app source on disk.

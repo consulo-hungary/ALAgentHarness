@@ -55,3 +55,5 @@ numbered spec, brainstorm pipeline, functional upgrade, SDD, commits or implicit
 
 Report findings, applied/deferred changes, PASS/FAIL per company rule, build/regression
 evidence and honest unrun tests. No claim of complete preservation without sufficient proof.
+
+MCP server missing or failing (3 attempts in total): stop, return `QUESTION: MCP <server> failed 3x: <tool>: <error>` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

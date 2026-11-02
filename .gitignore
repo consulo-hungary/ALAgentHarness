@@ -14,3 +14,6 @@ CLAUDE.local.md
 # OS / editor noise
 .DS_Store
 Thumbs.db
+
+# User-approved MCP fallback marker (see plugin/references/mcp-failure-policy.md)
+.harness-allow-fallback

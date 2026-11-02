@@ -44,7 +44,11 @@ Use what the session exposes; list your tools, do not assume.
 |------|-------|-------------|
 | Claude Code (`.mcp.json` server `al`, from `al launchmcpserver`) | `al_build` | `al_getdiagnostics` |
 | GitHub Copilot in VS Code (AL extension tools) | `al_build` | `al_getdiagnostics` |
-| No MCP tool (fallback) | `al compile` CLI, see below | the compiler output |
+| No MCP tool (fallback) | `al compile` CLI, see below, only after the user approved it | the compiler output |
+
+If the `al` MCP server does not start or a call fails 3 attempts in total, apply the
+[MCP failure policy](../../references/mcp-failure-policy.md): ask the user (Retry / Continue
+without it / Stop). The CLI fallback is for the build only and never counts as test evidence.
 
 No tool and no `al` CLI? Hard stop, below. The plugin starts the AL MCP server without a
 project: when a tool answers "no projects are loaded", call `al_addproject` for each explicitly

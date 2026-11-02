@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -197,6 +198,76 @@ test('smoke: plugin stays Business Central AL only (no web/Python/generic-projec
   }
 });
 
+// MCP failure policy: three tries, then ask the user; never dig through the file system.
+test('smoke: MCP failure policy exists and states the 3-attempt dialog rule', () => {
+  const policy = read('references/mcp-failure-policy.md').replace(/\s+/g, ' ');
+  assert.match(policy, /at most \*\*3 attempts in total\*\*/);
+  assert.match(policy, /ask the user through the host's question dialog/);
+  assert.match(policy, /Retry.*Continue without.*Stop here/);
+  assert.match(policy, /QUESTION: MCP <server> failed 3x/);
+  for (const server of mcpServers) assert.ok(policy.includes(`\`${server}\``), `policy misses ${server}`);
+  for (const server of ['bc-observatory', 'bc-code-atlas', 'microsoft-learn']) assert.ok(policy.includes(server));
+});
+
+for (const name of agents) {
+  test(`smoke agent ${name}: MCP users must reference the failure policy`, () => {
+    const canonical = read(`agents/${name}.md`);
+    const tools = frontmatter(read(`copilot/agents/${name}.agent.md`), name).tools ?? [];
+    const usesMcp = tools.some((tool) => tool.includes('/')) || /mcp__/.test(canonical);
+    if (usesMcp) assert.match(canonical, /mcp-failure-policy\.md/, `${name} uses MCP but ignores the policy`);
+  });
+}
+
+test('smoke: skills and the session rules point at the MCP failure policy', () => {
+  for (const relative of ['skills/al-knowledge/SKILL.md', 'skills/al-build-validation/SKILL.md',
+    'skills/al-object-id-assignment/SKILL.md', 'skills/feature-design/SKILL.md']) {
+    assert.match(read(relative), /mcp-failure-policy\.md/, relative);
+  }
+  const session = spawnSync(process.execPath, [path.join(root, 'hooks', 'session-start.mjs')], { encoding: 'utf8' });
+  assert.match(session.stdout, /3 attempts/);
+  assert.match(session.stdout, /Retry \/ Continue without <server> \/ Stop/);
+  assert.match(session.stdout, /Never compensate on the file system/);
+});
+
+test('smoke: guardrail blocks base-app digging, allows normal work, honours the user override', () => {
+  const run = (command, cwd = root, relative = 'hooks/no-base-app-digging.mjs', copilot = false) => spawnSync(
+    process.execPath, [path.join(root, relative)], {
+      input: JSON.stringify(copilot ? { toolName: 'powershell', toolArgs: { command }, cwd }
+        : { tool_name: 'Bash', tool_input: { command }, cwd }),
+      encoding: 'utf8',
+    });
+  const blocked = [
+    'Expand-Archive -Path .\\.alpackages\\Microsoft_Base Application.app -DestinationPath C:\\tmp\\base',
+    'unzip Base.app -d base',
+    'Invoke-WebRequest https://github.com/microsoft/BCApps/archive/refs/heads/main.zip -OutFile b.zip',
+    'git clone https://github.com/microsoft/BCApps',
+    'Get-ChildItem -Recurse app\\.alpackages | Select-String "OnBeforePost"',
+    'rg -n "OnAfterPost" C:\\tmp\\BaseApplication',
+  ];
+  for (const command of blocked) {
+    const result = run(command);
+    assert.equal(result.status, 2, `should block: ${command}`);
+    assert.match(result.stderr, /3 attempts/);
+    assert.match(result.stderr, /ask the user/);
+    const copilot = run(command, root, 'copilot/no-base-app-digging.mjs', true);
+    assert.equal(copilot.status, 0);
+    assert.equal(JSON.parse(copilot.stdout).permissionDecision, 'deny', `copilot should deny: ${command}`);
+  }
+  for (const command of ['git status', 'node --test plugin/tests', 'Get-ChildItem app\\src',
+    'al compile /project:app /packagecachepath:app/.alpackages /out:app/output.app',
+    'Expand-Archive notes.txt', 'curl https://example.com/api']) {
+    assert.equal(run(command).status, 0, `should allow: ${command}`);
+    assert.equal(run(command, root, 'copilot/no-base-app-digging.mjs', true).stdout, '', `copilot allow: ${command}`);
+  }
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-fallback-'));
+  try {
+    assert.equal(run('unzip Base.app -d base', workspace).status, 2);
+    fs.writeFileSync(path.join(workspace, '.harness-allow-fallback'), '');
+    assert.equal(run('unzip Base.app -d base', workspace).status, 0, 'user-approved fallback lifts the block');
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
 test('smoke: no pinned model versions outside the documented Opus resolution', () => {
   const pinned = /claude[ -]opus[ -]\d|opus \d\.\d|\bgpt-\d|\bsonnet \d|\bhaiku\b/i;
   const files = ['agents', 'commands', 'skills', 'copilot', 'templates', 'README.md']

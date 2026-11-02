@@ -40,3 +40,4 @@ follows the spec's frontmatter.
 | [2-focused-commands.md](2-focused-commands.md) | Four focused plugin commands | approved | none |
 | [3-project-aware-sdd.md](3-project-aware-sdd.md) | Project-aware test-first SDD (superseded) | implemented | none |
 | [4-al-only-harness.md](4-al-only-harness.md) | Business Central AL-only harness with automated smoke tests | implemented | none |
+| [5-mcp-failure-policy.md](5-mcp-failure-policy.md) | MCP failure policy: three tries, then ask the user | implemented | none |

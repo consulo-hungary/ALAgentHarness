@@ -30,3 +30,5 @@ unresolved environment/side-effect permissions. Ask MAIN ONE next question at a 
 When enough decisions exist, return `DIRECTION READY` with draft-ready content; this is
 not approval of a final spec or authorization to install packages, deploy or alter data.
 Never claim simulated research or tests as executed evidence.
+
+MCP server missing or failing (3 attempts in total): stop, return `QUESTION: MCP <server> failed 3x: <tool>: <error>` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

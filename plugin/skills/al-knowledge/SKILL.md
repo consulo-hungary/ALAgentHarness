@@ -69,10 +69,15 @@ Not found: <what you searched and did not find, if anything>
 
 ## Missing source
 
-- **BC Observatory plugin not loaded:** say so and give the install:
+- **BC Observatory plugin not loaded or failing:** follow the
+  [MCP failure policy](../../references/mcp-failure-policy.md): 3 attempts, then ask the
+  user (Retry / Continue without it / Stop). Never dig through base-app source, symbol
+  packages or `.alpackages` on disk instead. If the user continues, answer from the
+  symbols and label it "base-app body not checked". To install the plugin:
   `claude plugin marketplace add waldo1001/waldo.BCObservatory`, then
-  `claude plugin install bc-observatory@bc-observatory`. Fall back to the symbols and label the
-  answer "base-app body not checked".
+  `claude plugin install bc-observatory@bc-observatory`.
+- **BC Code Atlas or Microsoft Learn failing:** same policy; label the answer
+  "base-app body not checked" / "not checked against Learn".
 - **BCQuality not installed:** say so (`/plugin marketplace add microsoft/BCQuality`, then
   `/plugin install bcquality@bcquality`) and label the answer "not checked against BCQuality".
 

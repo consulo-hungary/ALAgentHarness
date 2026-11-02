@@ -29,3 +29,5 @@ approve specs, build/publish/run tests, review, commit or launch nested agents. 
 test/spec gaps go to SDD/MAIN for approval, not silent changes. Return exact changed files,
 source hashes, logic-to-criteria mapping, reservation evidence and blockers to the retained
 SDD coordinator, which owns subsequent build -> publish -> GREEN.
+
+MCP server missing or failing (3 attempts in total): stop, return `QUESTION: MCP <server> failed 3x: <tool>: <error>` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

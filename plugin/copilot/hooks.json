@@ -15,6 +15,12 @@
         "bash": "node \"${PLUGIN_ROOT}/copilot/no-literal-ui-text.mjs\"",
         "powershell": "node \"${PLUGIN_ROOT}/copilot/no-literal-ui-text.mjs\"",
         "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/copilot/no-base-app-digging.mjs\"",
+        "powershell": "node \"${PLUGIN_ROOT}/copilot/no-base-app-digging.mjs\"",
+        "timeoutSec": 10
       }
     ]
   }

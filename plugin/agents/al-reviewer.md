@@ -27,3 +27,5 @@ blocking/nonblocking. Distinguish proven bugs from uncertainty; no unsupported f
 Then report reviewed source/package revision, spec/DoD identity, checks, gaps and verdict.
 No findings is not a substitute for missing checks. Return blocking fixes to the coordinator;
 after ANY source edits it must refresh validation/DoD and launch independent review again.
+
+MCP server missing or failing (3 attempts in total): stop, return `QUESTION: MCP <server> failed 3x: <tool>: <error>` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

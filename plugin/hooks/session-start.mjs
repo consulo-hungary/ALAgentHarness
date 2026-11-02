@@ -21,4 +21,5 @@ console.log(`AL agent harness (plugin) - always-on rules:
 - Resolve one active spec root with al-project-layout: docs/specs/ for new projects, legacy specs/ respected; both exist -> main selects once. Pass paths to actual agents, never roleplay delegation.
 - Final-spec approval pins the NONproduction Sandbox and permitted operations before actual SDD RED/GREEN/mutation tests. No production, destructive sync or global autoApprove changes.
 - AL-commit authorizes logical local commits after index/diff inspection; preserve unrelated staging and exclude unreviewed mixed-file edits. No push or PR.
+- MCP servers (bc-observatory, bc-code-atlas, microsoft-learn, al, al-object-id-ninja): if one does not start or a call fails 3 attempts in total, STOP and ask the user with the question dialog (Retry / Continue without <server> / Stop). Never compensate on the file system: no downloading or unzipping base-app source, no extracting .app/.zip, no searching .alpackages. Subagents return QUESTION to MAIN. See references/mcp-failure-policy.md.
 Templates when the project has none: ${root}/templates (spec template, DEFINITION-OF-DONE.md, rules README).`);

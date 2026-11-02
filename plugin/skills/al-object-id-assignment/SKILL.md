@@ -99,7 +99,9 @@ is what the internal DoD checks the code against.
 ## Hard stop - no fallback
 
 > ⛔ No Ninja tool available, the call errors, or the returned ID is already declared in the
-> app: **STOP and report it.** Do not fall back to `idRanges`, to the highest existing ID,
+> app: **STOP and report it.** Retry at most 3 attempts in total, then ask the user with the
+> dialog per the [MCP failure policy](../../references/mcp-failure-policy.md); "continue" never
+> allows an invented ID. Do not fall back to `idRanges`, to the highest existing ID,
 > or to "a safe-looking number". Tell the user how to unblock and wait:
 >
 > - Claude Code: approve the `al-object-id-ninja` server from `.mcp.json` (`/mcp`), or

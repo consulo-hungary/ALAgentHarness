@@ -148,6 +148,20 @@ availability is specific to the actual account/host, not asserted by frontmatter
 Guardrail hooks remain inherited when installed; local hooks are not required setup.
 Required server declarations in [.mcp.json](.mcp.json) remain user-owned.
 
+## MCP failure policy
+
+If an MCP server (`bc-observatory`, `bc-code-atlas`, `microsoft-learn`, `al`,
+`al-object-id-ninja`) does not start or a call fails 3 attempts in total, the agent
+stops and asks you in the question dialog: **Retry / Continue without the server / Stop**.
+It never works around the failure by downloading or unzipping the base app, extracting
+`.app`/`.zip` packages or searching `.alpackages`: those cost credits for a worse answer.
+Subagents return `QUESTION: MCP <server> failed 3x` to the main chat, which asks you.
+See [mcp-failure-policy](references/mcp-failure-policy.md). The shell form of the
+workarounds is blocked by [no-base-app-digging](hooks/no-base-app-digging.mjs); if you
+pick a local fallback in the dialog, the agent creates an empty `.harness-allow-fallback`
+file in the workspace root to lift the block (it is git-ignored in this repository; add it
+to the `.gitignore` of consuming projects).
+
 ## Validation
 
 Run `node --test plugin/tests/*.test.mjs` from the repository root. It runs automatically
