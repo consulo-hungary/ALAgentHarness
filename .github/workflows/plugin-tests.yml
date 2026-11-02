@@ -1,0 +1,22 @@
+name: plugin-tests
+
+on:
+  push:
+    paths: ['plugin/**', '.claude-plugin/**', '.github/workflows/plugin-tests.yml']
+  pull_request:
+    paths: ['plugin/**', '.claude-plugin/**', '.github/workflows/plugin-tests.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Git identity for fixture repositories
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "ci"
+      - name: Harness tests (every command, agent, skill, hook, helper)
+        run: node --test plugin/tests/*.test.mjs

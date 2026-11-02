@@ -1,7 +1,7 @@
 ---
 name: al-brainstorm
 description: "Opus-only read-only project feature research, returning one next question to main."
-tools: ["read", "search", "web", "bc-observatory/*", "bc-code-atlas/*", "microsoft-learn/*"]
+tools: ["read", "search", "bc-observatory/*", "bc-code-atlas/*", "microsoft-learn/*"]
 user-invocable: false
 ---
 

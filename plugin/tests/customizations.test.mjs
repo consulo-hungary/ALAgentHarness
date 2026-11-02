@@ -11,8 +11,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
 const json = (relative) => JSON.parse(read(relative));
 const specialists = ['al-spec', 'al-coder', 'al-build-fixer', 'al-reviewer'];
-const names = ['al-start', 'al-refactor', 'al-brainstorm', 'al-commit', 'al-sdd',
-  'project-sdd', 'project-reviewer', ...specialists];
+const names = ['al-start', 'al-refactor', 'al-brainstorm', 'al-commit', 'al-sdd', ...specialists];
 function files(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(directory, entry.name);
@@ -171,36 +170,14 @@ test('four commands have independent scopes and real dispatch contracts', () => 
   assert.match(brainstorm, /SAME retained agent/);
   assert.match(brainstorm, /ACTUAL final artifact/);
   assert.match(brainstorm, /Direction != final-spec approval/);
-  assert.match(brainstorm, /AL launches REAL `al-sdd`/);
-  assert.match(brainstorm, /Non-AL launches REAL/);
+  assert.match(brainstorm, /AL launches REAL `al-sdd`|Launch REAL `al-sdd`/);
   const sdd = read('agents/al-sdd.md');
   assert.match(sdd, /assertion failure/);
   assert.match(sdd, /Mutation -> RED/);
   assert.match(sdd, /Revert -> GREEN/);
   assert.match(sdd, /session-bound/);
   assert.match(sdd, /SPECIALIST REQUEST\/full packet/);
-  assert.match(sdd, /BC AL profile only/);
-  const projectSdd = read('agents/project-sdd.md');
-  assert.match(projectSdd, /For a Business Central AL\s+workspace, hand off/);
-  assert.match(projectSdd, /assertion failure[\s\S]*proves automated\s+RED/);
-  assert.match(projectSdd, /MANUAL RED/);
-  assert.match(projectSdd, /MANUAL GREEN/);
-  assert.match(projectSdd, /tests before logic/i);
-  assert.match(projectSdd, /project-reviewer/);
-  assert.match(projectSdd, /no\s+credible automated test/);
-  assert.match(projectSdd, /No commit, push or\s+PR/);
-  const projectSddAdapter = frontmatter(read('copilot/agents/project-sdd.agent.md'));
-  assert.equal(projectSddAdapter.name, 'project-sdd');
-  assert.equal(projectSddAdapter['user-invocable'], 'false');
-  assert.deepEqual(JSON.parse(projectSddAdapter.tools), ['read', 'search', 'edit', 'execute']);
-  assert.ok(!Object.hasOwn(projectSddAdapter, 'agents'),
-    'Coordinator must be able to launch actual specialists');
-  const profile = read('skills/project-profiles/SKILL.md');
-  assert.match(profile, /Business Central AL/);
-  assert.match(profile, /Web\/JavaScript\/TypeScript/);
-  assert.match(profile, /Python/);
-  assert.match(profile, /Other or custom project/);
-  assert.match(profile, /Never\s+select a profile from the command name/);
+  assert.match(sdd, /Business Central AL only/);
 });
 
 test('direction authorizes one actual numbered drafter, MAIN alone approves the final artifact', () => {
@@ -297,17 +274,6 @@ test('independent reviewer is read-only with evidence-first findings and restric
   assert.match(reviewer, /Missing\/stale required evidence -> NOT DONE\/BLOCKED/);
 });
 
-test('generic project reviewer is independent, read-only and separate from AL review', () => {
-  const reviewer = read('agents/project-reviewer.md');
-  const adapter = frontmatter(read('copilot/agents/project-reviewer.agent.md'));
-  assert.equal(adapter.name, 'project-reviewer');
-  assert.deepEqual(JSON.parse(adapter.tools), ['read', 'search']);
-  assert.match(reviewer, /For Business Central AL, use/);
-  assert.match(reviewer, /Do not execute commands, edit files/);
-  assert.match(reviewer, /approved spec identity/);
-  assert.match(reviewer, /Missing or stale evidence means BLOCKED/);
-});
-
 test('source edits stale evidence; logic and test changes require the right revalidation', () => {
   const packet = read('references/specialist-handoff.md');
   const sdd = read('agents/al-sdd.md');
@@ -347,13 +313,13 @@ test('project knowledge is relevant read-only evidence across feature and refact
   assert.match(policy, /not agent instructions or tool permissions/);
   assert.match(policy, /Keep knowledge files read-only/);
   assert.match(policy, /content identity\/hash/);
-  for (const relative of ['skills/feature-design/SKILL.md', 'skills/project-profiles/SKILL.md',
+  for (const relative of ['skills/feature-design/SKILL.md',
     'agents/al-brainstorm.md', 'agents/al-spec.md', 'references/specialist-handoff.md']) {
     assert.match(read(relative), /knowledgeRoot/);
     assert.match(read(relative), /project-knowledge\.md/);
   }
   assert.match(read('agents/al-refactor.md'), /project-knowledge\.md/);
-  for (const relative of ['templates/spec-TEMPLATE.md', 'templates/project-SPEC-TEMPLATE.md']) {
+  for (const relative of ['templates/spec-TEMPLATE.md']) {
     assert.match(read(relative), /## Knowledge sources/);
     assert.match(read(relative), /knowledgeRoot|Knowledge root/);
   }

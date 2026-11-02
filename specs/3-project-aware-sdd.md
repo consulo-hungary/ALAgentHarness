@@ -1,11 +1,15 @@
 ---
-title: Project-aware test-first SDD
+title: Project-aware test-first SDD (superseded by 4-al-only-harness.md)
 status: implemented
 depends-on: []
 source: developer request, 2026-10-31
 ---
 
 # Project-aware test-first SDD
+
+> Superseded: the non-AL route (web, Python, custom projects), `project-sdd`,
+> `project-reviewer` and the project-profile resolver were removed by
+> [4-al-only-harness.md](4-al-only-harness.md). Kept for history.
 
 ## Context
 

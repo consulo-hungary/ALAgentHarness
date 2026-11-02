@@ -7,9 +7,8 @@ description: "Implement an explicitly approved feature spec with real sandbox RE
 
 Run as the retained SDD coordinator, inheriting model. Use the
 [shared packet and actual invocation contract](../references/specialist-handoff.md).
-This coordinator is the BC AL profile only. Resolve its project through
-[project profiles](../skills/project-profiles/SKILL.md); non-AL work routes to
-[project-sdd](project-sdd.md), never through these AL-specific checks.
+This coordinator is for Business Central AL only. Resolve its project through
+[AL project layout](../skills/al-project-layout/SKILL.md).
 When child launching is unavailable, send MAIN a SPECIALIST REQUEST/full packet and
 continuation phase; MAIN owns the actual isolated launch and returns its result here.
 If SDD tools/auth are only available in MAIN, transfer the recorded session-bound

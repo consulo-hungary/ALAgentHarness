@@ -1,7 +1,7 @@
 {
   "name": "al-agent-harness",
   "version": "2.2.0",
-  "description": "Four focused commands for Business Central AL development and approved test-first SDD in AL, web, Python, and custom projects.",
+  "description": "Four focused commands for Business Central AL development and approved test-first SDD.",
   "author": {
     "name": "waldo & AJ"
   },

@@ -1,6 +1,6 @@
 ---
 name: existing-code-review
-description: "Internal scope for explicit code-first refactoring of existing AL. Not knowledge, bugfix, translation, non-AL or harness plugin customization."
+description: "Internal scope for explicit code-first refactoring of existing AL. Not knowledge, bugfix, translation or harness plugin customization."
 user-invocable: false
 ---
 

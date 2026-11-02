@@ -46,14 +46,6 @@ review. Tool/auth absence returns an actionable blocker, never invented executio
 - Reservation ledger, reversible mutation inventory, original/mutated source identities,
   mutation-to-test mapping/results and recovery/deployed-state record.
 
-For non-AL projects, provide the corresponding owning project roots, detected profile
-evidence, repository instructions, package manager/environment, exact test/build/lint/type
-check commands, test selectors, changed-file allowlists, and source/test revision hashes.
-Mark AL-only paths, version, reservations and Sandbox fields `not applicable`; do not
-inherit AL APIs, IDs, publishing assumptions or test tools. Explicitly record any approved
-local or nonproduction side effects. Keep the same approval, baseline, isolation and
-evidence-freshness requirements.
-
 The caller checks actual returned source delta against the allowlist and baseline before
 accepting a handoff. Writers/build/publish/tests are sequential, never concurrent on shared
 sources or packages. No specialist invents missing approval, IDs, tool execution or evidence.

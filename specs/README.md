@@ -27,9 +27,7 @@ the agent that builds it, and it travels with the PR.
 - A spec with open questions stays `draft`.
 - Write a new feature spec through `/AL-brainstorm`. The workflow adds it to the index.
   Setup, code-only refactoring and commit grouping do not require feature specs.
-- `/AL-brainstorm` is project-aware despite its historical name: AL uses the AL template
-  and Sandbox workflow; non-AL projects use their repository contract or the generic
-  template and project SDD coordinator.
+- `/AL-brainstorm` writes AL feature specs and uses the AL template and Sandbox workflow.
 
 ## Index
 
@@ -40,4 +38,5 @@ follows the spec's frontmatter.
 |------|-------|--------|------------|
 | [1-al-workflow-commands.md](1-al-workflow-commands.md) | Historical AL workflow contract (superseded) | draft | none |
 | [2-focused-commands.md](2-focused-commands.md) | Four focused plugin commands | approved | none |
-| [3-project-aware-sdd.md](3-project-aware-sdd.md) | Project-aware test-first SDD | implemented | none |
+| [3-project-aware-sdd.md](3-project-aware-sdd.md) | Project-aware test-first SDD (superseded) | implemented | none |
+| [4-al-only-harness.md](4-al-only-harness.md) | Business Central AL-only harness with automated smoke tests | implemented | none |

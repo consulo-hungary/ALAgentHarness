@@ -1,0 +1,208 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import test from 'node:test';
+
+// Harness smoke test. Runs on every plugin change (pre-commit hook + CI) and checks EVERY
+// command and agent found on disk, so a new or edited one is covered without editing this file.
+// It is a static + executable check: it cannot prove live host dispatch or model availability.
+const root = fileURLToPath(new URL('../', import.meta.url));
+const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
+const exists = (relative) => fs.existsSync(path.join(root, relative));
+const list = (relative, suffix) => fs.readdirSync(path.join(root, relative))
+  .filter((name) => name.endsWith(suffix)).sort();
+
+function frontmatter(text, label) {
+  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  assert.ok(match, `${label}: missing frontmatter`);
+  const fields = {};
+  for (const line of match[1].split(/\r?\n/)) {
+    const field = line.match(/^([a-z][a-z-]*): (.+)$/);
+    assert.ok(field, `${label}: unsupported frontmatter line "${line}"`);
+    fields[field[1]] = field[2].startsWith('"') || field[2].startsWith('[')
+      ? JSON.parse(field[2]) : field[2];
+  }
+  assert.ok(String(fields.description ?? '').length > 20, `${label}: description too short`);
+  return fields;
+}
+
+function walk(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(directory, entry.name);
+    if (entry.name === 'node_modules') return [];
+    return entry.isDirectory() ? walk(full) : [full];
+  });
+}
+
+function assertLinksResolve(relative) {
+  const file = path.join(root, relative);
+  for (const match of read(relative).matchAll(/\]\((\.\.?\/[^)\s]+)\)/g)) {
+    const target = path.resolve(path.dirname(file), match[1].split('#')[0]);
+    assert.ok(fs.existsSync(target), `${relative}: broken link ${match[1]}`);
+  }
+}
+
+const commands = list('commands', '.md');
+const agents = list('agents', '.md').map((file) => path.basename(file, '.md'));
+const skills = fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+const mcpServers = Object.keys(JSON.parse(read('.mcp.json')).mcpServers);
+// Servers provided by the declared plugin dependencies rather than by .mcp.json.
+const toolServers = new Set([...mcpServers, 'bc-observatory', 'microsoft-learn']);
+const builtinTools = new Set(['read', 'search', 'edit', 'execute']);
+
+test('smoke: the plugin ships commands and agents to test', () => {
+  assert.equal(commands.length, 4, 'exactly four public commands');
+  assert.ok(agents.length > 0);
+  assert.ok(skills.length > 0);
+});
+
+for (const file of commands) {
+  const name = path.basename(file, '.md');
+  test(`smoke command ${name}: valid, dispatches to an existing agent or skill, links resolve`, () => {
+    const relative = `commands/${file}`;
+    const text = read(relative);
+    frontmatter(text, relative);
+    assert.match(text, new RegExp(`!${name}.*shell execution.*NOT`, 's'), 'must warn that ! is not a command');
+    assertLinksResolve(relative);
+
+    const known = new Set([...agents, ...skills]);
+    const mentioned = [...text.matchAll(/`((?:al|project)-[a-z][a-z-]*)`/g)].map((match) => match[1]);
+    const linkedSkills = [...text.matchAll(/skills\/([a-z-]+)\/SKILL\.md/g)].map((match) => match[1]);
+    for (const token of mentioned) assert.ok(known.has(token), `${relative}: unknown agent/skill \`${token}\``);
+    assert.ok([...mentioned, ...linkedSkills].some((token) => known.has(token)),
+      `${relative}: dispatches to no agent or skill`);
+    for (const skill of linkedSkills) assert.ok(skills.includes(skill), `${relative}: unknown skill ${skill}`);
+  });
+}
+
+for (const name of agents) {
+  test(`smoke agent ${name}: canonical + Copilot adapter are coherent and its tools are valid`, () => {
+    assert.ok(exists(`copilot/agents/${name}.agent.md`), `missing Copilot adapter for ${name}`);
+    const canonicalPath = `agents/${name}.md`;
+    const adapterPath = `copilot/agents/${name}.agent.md`;
+    const canonical = frontmatter(read(canonicalPath), canonicalPath);
+    const adapterText = read(adapterPath);
+    const adapter = frontmatter(adapterText, adapterPath);
+
+    assert.equal(canonical.name, name);
+    assert.equal(adapter.name, name);
+    assert.equal(adapter['user-invocable'], 'false', 'internal agents are not user-invocable');
+    assert.ok(adapterText.includes(`../../agents/${name}.md`), 'adapter must point at its canonical agent');
+    assert.equal(adapter.model, undefined, 'no pinned model in adapter frontmatter');
+    assert.equal(canonical.model, undefined, 'no pinned model in canonical frontmatter');
+    assertLinksResolve(canonicalPath);
+    assertLinksResolve(adapterPath);
+
+    for (const tool of adapter.tools ?? []) {
+      if (builtinTools.has(tool)) continue;
+      const [server, ...rest] = tool.split('/');
+      assert.ok(rest.length === 1 && toolServers.has(server),
+        `${adapterPath}: unknown tool "${tool}" (allowed servers: ${[...toolServers].join(', ')})`);
+    }
+  });
+
+  test(`smoke agent ${name}: is reachable from a command, skill or another agent`, () => {
+    const own = new Set([`agents/${name}.md`, `copilot/agents/${name}.agent.md`]);
+    const sources = ['commands', 'skills', 'agents', 'references']
+      .flatMap((directory) => walk(path.join(root, directory)))
+      .map((file) => path.relative(root, file).replaceAll('\\', '/'))
+      .filter((relative) => relative.endsWith('.md') && !own.has(relative));
+    const link = new RegExp(`\\b${name}\\b`);
+    assert.ok(sources.some((relative) => link.test(read(relative))), `${name} is never referenced`);
+  });
+}
+
+test('smoke: every Copilot adapter has a canonical agent', () => {
+  const adapters = list('copilot/agents', '.agent.md').map((file) => file.replace('.agent.md', ''));
+  assert.deepEqual(adapters, agents);
+});
+
+for (const skill of skills) {
+  test(`smoke skill ${skill}: valid and internal`, () => {
+    const relative = `skills/${skill}/SKILL.md`;
+    const meta = frontmatter(read(relative), relative);
+    assert.equal(meta.name, skill);
+    assert.equal(meta['user-invocable'], 'false');
+    assertLinksResolve(relative);
+    assert.ok(!commands.some((file) => path.basename(file, '.md').toLowerCase() === skill.toLowerCase()),
+      `skill ${skill} collides with a command name`);
+  });
+}
+
+test('smoke: hooks resolve to real scripts and run cleanly', () => {
+  const registrations = [
+    ['copilot/hooks.json', /\$\{PLUGIN_ROOT\}\/([^"]+)/],
+    ['hooks/hooks.json', /\$\{CLAUDE_PLUGIN_ROOT\}\/([^"]+)/],
+  ];
+  let count = 0;
+  for (const [config, pattern] of registrations) {
+    const scripts = [...JSON.stringify(JSON.parse(read(config))).matchAll(new RegExp(pattern, 'g'))]
+      .map((match) => match[1].replace(/\\$/, ''));
+    assert.ok(scripts.length >= 2, `${config}: expected session-start and guardrail hooks`);
+    for (const script of new Set(scripts)) {
+      assert.ok(exists(script), `${config}: missing ${script}`);
+      const result = spawnSync(process.execPath, [path.join(root, script)], {
+        input: '{}', encoding: 'utf8', env: { ...process.env, PLUGIN_ROOT: root, CLAUDE_PLUGIN_ROOT: root },
+      });
+      assert.equal(result.status, 0, `${script} failed: ${result.stderr}`);
+      count += 1;
+    }
+  }
+  assert.ok(count >= 4);
+});
+
+test('smoke: the session-start rules name every public command', () => {
+  const result = spawnSync(process.execPath, [path.join(root, 'hooks', 'session-start.mjs')], { encoding: 'utf8' });
+  assert.equal(result.status, 0);
+  for (const file of commands) assert.ok(result.stdout.includes(path.basename(file, '.md')), file);
+});
+
+test('smoke: every helper script parses', () => {
+  const scripts = ['scripts', 'hooks', 'copilot', 'skills'].flatMap((directory) => walk(path.join(root, directory)))
+    .filter((file) => file.endsWith('.mjs'));
+  assert.ok(scripts.length >= 8);
+  for (const script of scripts) {
+    const result = spawnSync(process.execPath, ['--check', script], { encoding: 'utf8' });
+    assert.equal(result.status, 0, `${script}: ${result.stderr}`);
+  }
+});
+
+test('smoke: the opus resolver works against a realistic inventory', () => {
+  const run = (inventory) => spawnSync(process.execPath, [path.join(root, 'scripts', 'opus-model.mjs'),
+    JSON.stringify(inventory)], { encoding: 'utf8' });
+  const ok = run(['claude-sonnet-5.5', 'claude-opus-4.8', 'claude-opus-5.5']);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(JSON.parse(ok.stdout), 'claude-opus-5.5');
+  assert.notEqual(run(['claude-sonnet-5.5']).status, 0, 'no Opus must block, not fall back');
+});
+
+test('smoke: plugin stays Business Central AL only (no web/Python/generic-project features)', () => {
+  const outOfScope = [
+    /\bpython\b/i, /\bpytest\b/i, /\bdjango\b/i, /\bflask\b/i, /\bpylance\b/i,
+    /project-(?:sdd|reviewer|profiles)\b/, /\bnon-AL\b/i, /web\/javascript/i,
+    /\bgeneric project\b/i, /\bcustom projects\b/i, /\bweb,\s*python\b/i,
+  ];
+  const files = walk(root).map((file) => path.relative(root, file).replaceAll('\\', '/'))
+    .filter((relative) => /\.(md|json)$/.test(relative) && !relative.startsWith('tests/'));
+  for (const relative of files) {
+    const text = read(relative);
+    for (const pattern of outOfScope) assert.doesNotMatch(text, pattern, `${relative} contains out-of-scope ${pattern}`);
+  }
+  for (const name of agents) {
+    const tools = frontmatter(read(`copilot/agents/${name}.agent.md`), name).tools ?? [];
+    assert.ok(!tools.includes('web'), `${name}: general web tool is out of scope`);
+  }
+});
+
+test('smoke: no pinned model versions outside the documented Opus resolution', () => {
+  const pinned = /claude[ -]opus[ -]\d|opus \d\.\d|\bgpt-\d|\bsonnet \d|\bhaiku\b/i;
+  const files = ['agents', 'commands', 'skills', 'copilot', 'templates', 'README.md']
+    .flatMap((entry) => (fs.statSync(path.join(root, entry)).isDirectory() ? walk(path.join(root, entry))
+      : [path.join(root, entry)]))
+    .map((file) => path.relative(root, file).replaceAll('\\', '/'))
+    .filter((relative) => relative.endsWith('.md'));
+  for (const relative of files) assert.doesNotMatch(read(relative), pinned, `${relative} pins a model`);
+});

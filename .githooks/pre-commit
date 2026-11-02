@@ -1,0 +1,10 @@
+#!/bin/sh
+# Runs the plugin test suite whenever staged changes touch the plugin.
+# Enable once per clone: git config core.hooksPath .githooks
+if git diff --cached --name-only | grep -Eq '^(plugin/|\.claude-plugin/)'; then
+  echo "plugin changed: running harness tests (agents, commands, hooks, helpers)"
+  node --test plugin/tests/*.test.mjs || {
+    echo "Plugin tests failed - commit aborted." >&2
+    exit 1
+  }
+fi

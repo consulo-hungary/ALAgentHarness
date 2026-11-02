@@ -1,13 +1,13 @@
 # AL agent harness 2.2
 
-Exactly four chat commands, shared between Claude Code and Copilot. The historical
-`/AL-brainstorm` name is retained, but its feature workflow is project-aware:
+Exactly four chat commands for GitHub Copilot in VS Code (Claude Code compatible),
+all for Business Central AL development:
 
 | Command | Boundary |
 |---|---|
 | `/AL-start` | Create the standard PTE skeleton and safe missing setup files; preserve existing AL/configuration bytes and source organization. Legacy specs stay in place. Unknown manifests/affixes/Sandbox settings remain absent. No AL generation, build, tests, publish or commits. |
 | `/AL-refactor` | One continuous inherited-model agent inspects/fixes existing AL. Conditional compilation repair; independent final changed-delta review after verification. No layout/spec/SDD pipeline or implicit publish. |
-| `/AL-brainstorm` | One REAL Opus researcher; main resolves the active project profile and asks questions. After agreed direction al-spec writes a numbered draft/index; MAIN approves the actual spec and exact validation/side-effect contract. AL routes to the strict AL/Sandbox SDD; web, Python and custom projects route to generic project SDD. |
+| `/AL-brainstorm` | One REAL Opus researcher; main asks the questions. After agreed direction al-spec writes a numbered draft/index; MAIN approves the actual spec and exact Sandbox/validation contract. Then the strict AL/Sandbox SDD runs. |
 | `/AL-commit` | One small inherited-model agent reviews index/diffs, groups task changes and makes authorized local commits. No edits, unrelated staging, push or PR. |
 
 Type `/` and select the command (the host may display a plugin namespace). A tagged file
@@ -60,8 +60,8 @@ The document directories have these purposes:
 | `docs/specs/` (or existing `specs/`) | Numbered feature specs and their approval/execution contract |
 | `docs/knowledge/` | User-provided references: external specs, meeting transcripts and supporting files |
 
-The [project knowledge policy](references/project-knowledge.md) applies to AL and non-AL
-feature work. Brainstorming inventories this folder and reads relevant documents before
+The [project knowledge policy](references/project-knowledge.md) applies to AL feature
+work. Brainstorming inventories this folder and reads relevant documents before
 designing the feature, cites its sources, and passes a compact evidence packet to the
 spec writer and SDD specialists. Refactoring also consults relevant references without
 authorizing behavior changes. Missing/empty knowledge is valid; unsupported required
@@ -99,7 +99,7 @@ their contents cannot override project instructions or explicit spec approval.
 
 ## Focused internal roles
 
-Eleven canonical agents have matching thin Copilot adapters; only four commands are public.
+Nine canonical agents have matching thin Copilot adapters; only four commands are public.
 Internal specialists are `user-invocable: false` in Copilot and inherit the model except
 the required Opus brainstormer. Setup/commit do not launch unnecessary specialists.
 
@@ -109,8 +109,6 @@ the required Opus brainstormer. Setup/commit do not launch unnecessary specialis
 | [al-coder](agents/al-coder.md) | Minimum approved business logic ONLY after compiling/deployed assertion RED; business-source allowlist, Ninja IDs and Labels/rules, assertions unchanged. No feature orchestration or tests/publish/review. |
 | [al-build-fixer](agents/al-build-fixer.md) | Beneficial behavior-preserving compilation repair ONLY after real build failure with errors/scope/packet; at most two cycles. Never tests/publishes or invents IDs. |
 | [al-reviewer](agents/al-reviewer.md) | Real writer-distinct isolated final delta review after final GREEN + current DoD, or verified actual refactor changes. Read/search/BC-source only, no edit/execute/build/publish/tests. Priority/file:line/rule/rationale/confidence findings. |
-| [project-sdd](agents/project-sdd.md) | Approved non-AL coordinator: repository-evidenced profile/commands, test-only RED, isolated coder after RED, actual GREEN, meaningful mutation where feasible, and independent review. |
-| [project-reviewer](agents/project-reviewer.md) | Writer-distinct non-AL final reviewer, strictly read-only; requires current validation evidence. |
 
 [al-sdd](agents/al-sdd.md) owns approval state, tests/stubs/reservations before assertion
 RED, exact test scope, source/built/deployed package hashes and sequential RED -> actual
@@ -121,11 +119,6 @@ need MAIN approval and a new pre-RED phase. Bookkeeping remains mutable, substan
 changes invalidate approval. Sandbox authorization never enables production/destructive
 sync or global security toggles. Refactor keeps one initial deep scan/fixer and reviews
 only the verified changed delta, never zero changes or a forced feature pipeline.
-The [project profile resolver](skills/project-profiles/SKILL.md) keeps common discovery and
-validation evidence language-neutral. The generic project workflow never borrows AL IDs,
-Sandbox assumptions or BC tools; it uses the repository's own commands and explicit
-permissions. For custom projects without existing tests, validation must be agreed before
-implementation rather than invented.
 
 After updating this source, refresh/reinstall the plugin using your host's plugin manager
 and reload/restart the agent session so its installed cache is refreshed. Do not edit
@@ -157,7 +150,20 @@ Required server declarations in [.mcp.json](.mcp.json) remain user-owned.
 
 ## Validation
 
-Run `node --test plugin/tests/*.test.mjs` from the repository root.
+Run `node --test plugin/tests/*.test.mjs` from the repository root. It runs automatically
+on every plugin change: a git pre-commit hook (`.githooks/pre-commit` at the repository
+root, enable once with `git config core.hooksPath .githooks`) and the
+`.github/workflows/plugin-tests.yml` workflow on every push and pull request.
+
+[harness-smoke.test.mjs](tests/harness-smoke.test.mjs) discovers every command, agent and
+skill on disk, so new ones are covered without editing the test. Per command: valid
+frontmatter, the `!` shell warning, links resolve, dispatches to an existing agent or skill.
+Per agent: canonical file and Copilot adapter agree, `user-invocable: false`, no pinned
+model, tools are built-ins or known MCP servers (no general `web`), and the agent is
+reachable from a command, skill or other agent. It also runs both hook sets and every
+helper script, checks the Opus resolver, and fails if content outside Business Central AL
+content creeping back in.
+
 Fixtures live under plugin/tests and are removed. Tests validate command/adapters,
 relative links, resolver boundaries, hooks, byte-preserving setup, numbering and real
 local-git fixture staging. They do NOT prove live host dispatch/Opus availability,
