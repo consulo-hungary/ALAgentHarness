@@ -5,7 +5,7 @@ Exactly four chat commands, shared between Claude Code and Copilot. The historic
 
 | Command | Boundary |
 |---|---|
-| `/AL-start` | Shallow safe consuming-workspace setup; byte-preserving moves into app/test/docs, empty test is valid. Production source belongs under its app project; test-only source under its test project, never duplicate both. Empty root `PageExtensions`/`TableExtension` buckets are removed; non-empty source moves into the owning project. No AL generation, publish or commits. |
+| `/AL-start` | Create the standard PTE skeleton and safe missing setup files; preserve existing AL/configuration bytes and source organization. Legacy specs stay in place. Unknown manifests/affixes/Sandbox settings remain absent. No AL generation, build, tests, publish or commits. |
 | `/AL-refactor` | One continuous inherited-model agent inspects/fixes existing AL. Conditional compilation repair; independent final changed-delta review after verification. No layout/spec/SDD pipeline or implicit publish. |
 | `/AL-brainstorm` | One REAL Opus researcher; main resolves the active project profile and asks questions. After agreed direction al-spec writes a numbered draft/index; MAIN approves the actual spec and exact validation/side-effect contract. AL routes to the strict AL/Sandbox SDD; web, Python and custom projects route to generic project SDD. |
 | `/AL-commit` | One small inherited-model agent reviews index/diffs, groups task changes and makes authorized local commits. No edits, unrelated staging, push or PR. |
@@ -17,12 +17,47 @@ Never run workspace migration on this harness/sample repository.
 
 ## Project documents
 
-`/AL-start` creates these directories if missing and preserves their existing contents:
+`/AL-start` creates the following skeleton in the consuming project, not this repository:
+
+```text
+<project>/
+|-- AGENTS.md
+|-- <project>.code-workspace
+|-- .github/
+|   |-- copilot-instructions.md
+|   `-- workflows/
+|-- app/
+|   |-- app.json
+|   |-- AppSourceCop.json
+|   |-- .vscode/
+|   |   |-- settings.json
+|   |   `-- launch.json
+|   |-- .alpackages/
+|   |-- Features/Setup/{Codeunits,Pages,Tables}/
+|   `-- Translations/
+|-- test/
+|   |-- app.json
+|   `-- Tests/
+|-- docs/{specs,knowledge,generated}/
+`-- rules/
+```
+
+Existing manifests and connection/affix configuration are relocated only with evidence,
+never invented. Missing AGENTS/Copilot instructions and an app/test workspace are created
+safely; missing settings can be `{}`. Unknown manifests, AppSourceCop and launch settings
+remain absent and are reported. Existing workspace files, policies and app/Features or
+app/src organization are preserved; Setup scaffolding is only for an unorganized app.
+Legacy specs/ remains the active root instead of creating docs/specs/; when both exist,
+main selects once without merging. Empty workflows/rules/docs folders receive no templates,
+CI implementation, DoD, reports, hooks or extra tooling. Cache ignore gaps are reported
+unless an existing ignore file needs a relocation update.
+
+The document directories have these purposes:
 
 | Directory | Purpose |
 |---|---|
 | `docs/generated/` | Requested AI/agent-generated reports and exports |
-| `docs/specs/` | Numbered feature specs and their approval/execution contract |
+| `docs/specs/` (or existing `specs/`) | Numbered feature specs and their approval/execution contract |
 | `docs/knowledge/` | User-provided references: external specs, meeting transcripts and supporting files |
 
 The [project knowledge policy](references/project-knowledge.md) applies to AL and non-AL
@@ -104,8 +139,9 @@ availability is specific to the actual account/host, not asserted by frontmatter
 
 - [start-layout](scripts/start-layout.mjs): `planStart(absoluteRoot, { moves })`,
   `applyStart(plan)`. Default root manifest/root .al, safe removal of empty root-level
-  PageExtensions/TableExtension placeholders and intact legacy specs migration;
-  creates missing docs/specs, docs/generated and docs/knowledge directories;
+  PageExtensions/TableExtension placeholders; legacy specs stays intact.
+  Optional `specRoot` pins main's selection when both roots exist. Creates the PTE
+  skeleton and safe missing AGENTS/Copilot/workspace/settings files without overwrites;
   explicit discovered resources/nested sources need move entries. Hash verification,
   conflict/escape/symlink rejection and idempotence. Reference rewriting is the agent's
   exact config/docs task, **not** a claim of an exhaustive relocation engine.

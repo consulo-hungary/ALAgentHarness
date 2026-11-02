@@ -16,7 +16,7 @@ The request is to reduce unrelated phases and model cost while preserving real e
 
 | Command | Authorized task | Excluded work |
 |---------|-----------------|---------------|
-| AL-start | Shallow workspace discovery, consistent app/test/docs/specs/docs/generated folders, byte-preserving file moves, required path updates and safe missing local instruction setup. | AL source edits, deep code review, invented manifests/IDs, feature specs, publishing or commits. |
+| AL-start | Shallow discovery; standard PTE skeleton (root instructions/workspace, .github, app configuration/cache/Features/Setup/Translations, test/Tests, docs and rules), byte-preserving moves, necessary path updates and safe missing setup files. Preserve existing source organization and legacy specs. | AL source edits, deep review, invented manifests/IDs/affixes/Sandbox settings, template seeding, CI implementation, extra hooks/tooling, feature specs, builds/tests, publishing or commits. |
 | AL-refactor | Deep review of existing AL code with sourced findings and safe existing-file fixes, retaining behavior/IDs/contracts/schema/version; validate relevant existing apps/tests. | General folder setup, feature pipeline, blindly merging trigger/subscriber execution or unrelated upgrades. |
 | AL-brainstorm | Real Opus brainstorming child, necessary questions and verified alternatives; numbered draft, explicit final-spec/sandbox approval, then SDD. | Model substitution, implementation before final approval or production deployment. |
 | AL-commit | Small grouping agent, review current staged/unstaged/untracked changes, explicit staging and short meaningful local commits. | Code edits, secrets, blanket staging, history rewrites, push, PR or unrelated expensive review. |
@@ -40,6 +40,11 @@ The request is to reduce unrelated phases and model cost while preserving real e
 - Command invocation authorizes its narrow safe work, not an unrelated multi-stage flow.
   Final-spec approval still gates new-feature SDD and pins non-production sandbox operations.
 - AL-start may create an empty test directory without fabricating a test manifest or GUID.
+- Approved layout follow-up, 2026-11-01: create only the requested PTE skeleton and
+  evidence-backed configuration. Unknown manifest/dependency/connection data remains
+  absent and is reported. Existing policies/workspaces win; Setup category placeholders
+  are only for apps without existing source organization. Keep legacy specs/ in place,
+  and ask main to select once when both roots exist. No extra workflow artifacts.
 - AL-refactor may create a new file/folder/object only when truly required with explicit
   scoped permission; different triggers/subscribers are not interchangeable by assumption.
 - AL-commit includes the Copilot co-author trailer unless opted out and never changes Git

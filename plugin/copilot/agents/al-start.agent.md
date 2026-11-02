@@ -1,6 +1,6 @@
 ---
 name: al-start
-description: "Safe shallow AL workspace setup and byte-preserving relocation."
+description: "Create the standard PTE project layout, preserving existing configuration and AL bytes."
 user-invocable: false
 ---
 

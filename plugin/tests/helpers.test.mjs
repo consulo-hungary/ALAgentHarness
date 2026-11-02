@@ -100,7 +100,7 @@ test('write helpers reject symlink/junction ancestors even within workspace', ()
   assert.throws(() => planStart(root, { moves: [{ from: path.join('linked', 'keep.txt'), to: path.join('app', 'keep.txt') }] }), /Symlink/);
 }));
 
-test('AL-start plans read-only, moves AL/manifest/legacy docs byte-for-byte, stays idempotent', () => fixture((root, put) => {
+test('AL-start plans read-only, moves AL/manifest and preserves legacy specs byte-for-byte, stays idempotent', () => fixture((root, put) => {
   const al = Buffer.from('\uFEFFcodeunit 50000 Existing\r\n{\r\n}\r\n');
   const manifest = '{ "id": "existing-guid", "version": "1.2.3.4" }\r\n';
   put('app.json', manifest);
@@ -114,10 +114,11 @@ test('AL-start plans read-only, moves AL/manifest/legacy docs byte-for-byte, sta
   const plan = planStart(root);
   assert.deepEqual(fs.readdirSync(root).sort(), before);
   const result = applyStart(plan);
-  assert.equal(result.hashesVerified, 3);
+  assert.equal(result.hashesVerified, 2);
   assert.deepEqual(fs.readFileSync(path.join(root, 'app', 'Existing.al')), al);
   assert.equal(sha(fs.readFileSync(path.join(root, 'app', 'app.json'))), sha(manifest));
-  assert.equal(fs.readFileSync(path.join(root, 'docs', 'specs', '10-old.md'), 'utf8'), 'old spec');
+  assert.equal(fs.readFileSync(path.join(root, 'specs', '10-old.md'), 'utf8'), 'old spec');
+  assert.ok(!fs.existsSync(path.join(root, 'docs', 'specs')));
   assert.equal(fs.readFileSync(path.join(root, '.tools', 'keep.txt'), 'utf8'), 'hidden');
   assert.equal(fs.readFileSync(path.join(root, 'unrelated.txt'), 'utf8'), 'keep');
   assert.deepEqual(result.removedDirectories.sort(), ['PageExtensions', 'TableExtension']);
@@ -129,7 +130,7 @@ test('AL-start plans read-only, moves AL/manifest/legacy docs byte-for-byte, sta
     }
   }
   assert.ok(fs.existsSync(path.join(root, 'test')));
-  for (const directory of ['generated', 'specs', 'knowledge']) {
+  for (const directory of ['generated', 'knowledge']) {
     assert.ok(fs.statSync(path.join(root, 'docs', directory)).isDirectory());
   }
   assert.ok(!fs.existsSync(path.join(root, 'test', 'app.json')));
@@ -137,7 +138,103 @@ test('AL-start plans read-only, moves AL/manifest/legacy docs byte-for-byte, sta
   assert.deepEqual(second.moves, []);
   assert.deepEqual(second.directories, []);
   assert.deepEqual(second.removeEmptyDirectories, []);
+  assert.deepEqual(second.files, []);
   assert.equal(applyStart(second).hashesVerified, 0);
+}));
+test('AL-start creates exactly the new PTE skeleton and safe setup files, without invented configuration', () => fixture((root) => {
+  const plan = planStart(root);
+  assert.deepEqual(fs.readdirSync(root), []);
+  const result = applyStart(plan);
+  const workspace = `${path.basename(root)}.code-workspace`;
+  assert.deepEqual(fs.readdirSync(root).sort(),
+    ['.github', 'AGENTS.md', 'app', 'docs', 'rules', 'test', workspace].sort());
+  assert.deepEqual(fs.readdirSync(path.join(root, 'app')).sort(),
+    ['.alpackages', '.vscode', 'Features', 'Translations']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'app', 'Features')), ['Setup']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'app', 'Features', 'Setup')),
+    ['Codeunits', 'Pages', 'Tables']);
+  assert.deepEqual(fs.readdirSync(path.join(root, '.github')).sort(), ['copilot-instructions.md', 'workflows']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'test')), ['Tests']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'docs')).sort(), ['generated', 'knowledge', 'specs']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'rules')), []);
+  for (const relative of [path.join('.github', 'workflows'), path.join('docs', 'specs'),
+    path.join('docs', 'knowledge'), path.join('docs', 'generated'), path.join('test', 'Tests')]) {
+    assert.deepEqual(fs.readdirSync(path.join(root, relative)), []);
+  }
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, workspace), 'utf8')),
+    { folders: [{ path: 'app' }, { path: 'test' }] });
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, 'app', '.vscode', 'settings.json'), 'utf8')), {});
+  assert.match(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8'), /not configured/);
+  for (const relative of [path.join('app', 'app.json'), path.join('test', 'app.json'),
+    path.join('app', 'AppSourceCop.json'), path.join('app', '.vscode', 'launch.json'), 'DEFINITION-OF-DONE.md']) {
+    assert.ok(!fs.existsSync(path.join(root, relative)));
+  }
+  assert.equal(result.createdFiles.length, 4);
+  assert.deepEqual(planStart(root).files, []);
+  assert.deepEqual(planStart(root).directories, []);
+}));
+test('AL-start preserves existing policies, workspace, settings and source organization', () => fixture((root, put) => {
+  const existing = {
+    'AGENTS.md': Buffer.from('\uFEFFExisting policy\r\n'),
+    'custom.code-workspace': '{"folders":[{"path":"app"}]}',
+    [path.join('.github', 'copilot-instructions.md')]: 'Existing instructions',
+    [path.join('app', '.vscode', 'settings.json')]: '{"existing":true}',
+    [path.join('app', 'src', 'Existing.al')]: 'Existing AL bytes',
+    [path.join('app', 'app.json')]: '{"application":"27.0.0.0","runtime":"16.0"}',
+  };
+  for (const [file, content] of Object.entries(existing)) put(file, content);
+  const plan = planStart(root);
+  assert.deepEqual(plan.files, []);
+  applyStart(plan);
+  for (const [file, content] of Object.entries(existing)) {
+    assert.deepEqual(fs.readFileSync(path.join(root, file)), Buffer.from(content));
+  }
+  assert.ok(!fs.existsSync(path.join(root, 'app', 'Features')));
+  assert.ok(!fs.existsSync(path.join(root, `${path.basename(root)}.code-workspace`)));
+}));
+test('AL-start maps actual version and affix into missing project instructions', () => fixture((root, put) => {
+  put('app.json', '\uFEFF{"application":"28.0.0.0","runtime":"17.0","id":"not-to-copy"}');
+  put('AppSourceCop.json', '\uFEFF{"mandatoryAffixes":["CPA"]}');
+  const plan = planStart(root, { moves: [
+    { from: 'app.json', to: path.join('app', 'app.json') },
+    { from: 'AppSourceCop.json', to: path.join('app', 'AppSourceCop.json') },
+  ] });
+  applyStart(plan);
+  const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
+  assert.match(agents, /CPA/);
+  assert.match(agents, /28\.0\.0\.0/);
+  assert.match(agents, /17\.0/);
+  assert.doesNotMatch(agents, /not-to-copy/);
+}));
+test('AL-start honors main-selected spec root without merging existing roots', () => fixture((root, put) => {
+  put(path.join('specs', 'legacy.md'), 'legacy');
+  put(path.join(specRoot, 'new.md'), 'new');
+  const plan = planStart(root, { specRoot: 'specs' });
+  applyStart(plan);
+  assert.equal(fs.readFileSync(path.join(root, 'specs', 'legacy.md'), 'utf8'), 'legacy');
+  assert.equal(fs.readFileSync(path.join(root, specRoot, 'new.md'), 'utf8'), 'new');
+  assert.match(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8'), /specs\/\./);
+  assert.deepEqual(planStart(root, { specRoot: 'specs' }).files, []);
+}));
+test('AL-start detects new setup file conflicts and malformed evidence before writes', () => fixture((root, put) => {
+  const plan = planStart(root);
+  put('AGENTS.md', 'arrived after planning');
+  assert.throws(() => applyStart(plan), /Setup file overwrite conflict/);
+  assert.equal(fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8'), 'arrived after planning');
+  assert.ok(!fs.existsSync(path.join(root, 'app')));
+  put('app.json', 'invalid JSON');
+  assert.throws(() => planStart(root), SyntaxError);
+  assert.ok(!fs.existsSync(path.join(root, 'app')));
+}));
+test('AL-start detects changed configuration ancestors before moving any AL bytes', () => fixture((root, put) => {
+  put('app.json', '{}');
+  fs.mkdirSync(path.join(root, '.github'));
+  const plan = planStart(root);
+  fs.rmdirSync(path.join(root, '.github'));
+  put('.github', 'conflicting file');
+  assert.throws(() => applyStart(plan), /Directory conflict/);
+  assert.ok(fs.existsSync(path.join(root, 'app.json')));
+  assert.ok(!fs.existsSync(path.join(root, 'app')));
 }));
 test('AL-start never removes non-empty object folders and moves their source under the owning app', () => fixture((root, put) => {
   const source = Buffer.from('pageextension 50100 "Example" extends "Customer List" {}');

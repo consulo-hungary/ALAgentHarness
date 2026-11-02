@@ -133,19 +133,31 @@ entering a feature-spec/SDD pipeline. Setup and commit grouping do not launch th
 `AL-start` standardizes consuming AL workspaces to:
 
 ```text
+AGENTS.md            Project map and safety rules (preserve existing policies)
+<name>.code-workspace Explicit app/test folders (reuse an existing workspace)
+.github/             Copilot instructions and empty workflows/
 app/                 Application project
+app/.vscode/         Settings and evidence-backed launch configuration
+app/.alpackages/     Symbol cache (preserve/report ignore configuration)
+app/Features/Setup/  Codeunits, Pages, Tables (only without existing organization)
+app/Translations/    Localization resources
 test/                Test application
+test/Tests/          Test source boundary
 docs/                Maintained documentation
-docs/specs/          Feature contracts
+docs/specs/          Feature contracts (existing legacy specs/ stays in place)
 docs/generated/      Requested reusable AI reports (for example Excel or HTML)
 docs/knowledge/      User-provided references (external specs, meeting transcripts, etc.)
+rules/               Company rules (empty unless content already exists)
 ```
 
-Existing projects using `specs/` remain readable until setup safely migrates them. Where
-both spec roots contain conflicting content, the workflow must not silently overwrite it. Setup
+Existing projects using `specs/` retain it; setup does not migrate or create a parallel root.
+If both roots exist, main selects one once without merging. Setup
 must update affected tasks, CI, launch settings, dependencies and documentation links.
 Project-owned instructions and Definition of Done remain authoritative.
-Creating an empty `test/` directory does not invent a test app or prove tests ran.
+Missing manifests, affixes, dependencies and Sandbox settings are not invented; their
+absence is reported. Setup creates only safe instruction/workspace/settings files, not
+DoD/spec templates, CI jobs or hooks. It does not build, test, publish or commit.
+Creating an empty `test/Tests/` directory does not invent a test app or prove tests ran.
 
 New specification names are numbered: `1-project-create.md`, `2-carrier-validation.md`,
 `3-next-feature.md`. Allocate the next number above the highest existing numeric prefix;

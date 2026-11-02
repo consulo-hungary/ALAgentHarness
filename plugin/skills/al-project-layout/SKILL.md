@@ -13,7 +13,7 @@ repository. Explicit developer target wins; conflicting instructions require mai
 Default new consuming layout is app/, test/, docs/, docs/specs/, docs/generated/,
 docs/knowledge/. Knowledge holds user-provided references, not generated reports.
 Respect existing root/custom AL projects; discovery is shallow. Prefer docs/specs/ for
-new specs, respect legacy specs/ until safe AL-start migration. If both roots exist, main
+new specs, respect legacy specs/ without AL-start migration. If both roots exist, main
 selects ONE once; never split writers/indexes. Only brainstorm creates a numbered spec.
 
 Use [resolver](scripts/resolve-layout.mjs) with an absolute project root and explicit

@@ -59,6 +59,10 @@ pretend that changing personas is delegation. Autopilot does not disable tool ap
 
 `AL-start` performs consistent folder setup and byte-preserving moves with only necessary
 configuration/instruction updates. It never edits AL source or invokes a code review.
+Its PTE skeleton includes root AGENTS/workspace, .github instructions/workflows,
+app configuration/cache/Features/Setup/Translations, test/Tests, docs and rules.
+Unknown manifests/affixes/Sandbox settings remain absent; existing source organization
+wins over Setup scaffolding. No template seeding, CI implementation, builds or tests.
 `AL-refactor` reviews and improves existing code, not folder layout; event subscribers
 and table triggers must retain their distinct execution semantics unless equivalence is
 actually established. `AL-commit` groups already-existing changes and commits locally,
@@ -66,7 +70,7 @@ preserving staging intent and excluding sensitive files. It does not push or edi
 These commands do not run the former shared brainstorm/spec/implementation pipeline.
 
 New specs use `<next-number>-<kebab-title>.md` in the active spec root, numerically ordered.
-Legacy `specs/` remains supported until setup migrates it without collisions. Existing
+Legacy `specs/` stays in place; setup never migrates it or creates a parallel spec root. Existing
 project-owned constraints remain authoritative; instruction changes must be explicit.
 
 ### Host smoke tests

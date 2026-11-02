@@ -148,6 +148,14 @@ test('four commands have independent scopes and real dispatch contracts', () => 
   assert.match(start, /Test may remain\s+empty/);
   assert.match(start, /hook: inherited/);
   assert.match(start, /never migrate|Hard-stop/i);
+  for (const item of ['AGENTS.md', '.code-workspace', 'copilot-instructions.md',
+    'workflows/', 'Features/Setup/', 'Translations/', 'Tests/', 'rules/']) {
+    assert.ok(start.includes(item), `Missing PTE setup surface: ${item}`);
+  }
+  assert.match(start, /Leave unknown files absent/);
+  assert.match(start, /Legacy `specs\/` stays intact/);
+  assert.match(start, /no build, tests, symbol downloads/);
+  assert.match(start, /No extra workflow artifacts, hooks or CI implementation|Do not seed templates/);
   const refactor = read('agents/al-refactor.md');
   assert.match(refactor, /Invocation permits safe fixes/);
   assert.match(refactor, /EXISTING files only/);
