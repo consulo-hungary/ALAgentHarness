@@ -1,9 +1,13 @@
 ---
 name: al-start
-description: "Create the standard PTE layout with safe missing configuration and byte-preserving relocation."
+description: "Explicit AL-start --layout only: PTE scaffolding and byte-preserving relocation."
 ---
 
 # AL start
+
+Run only for explicit `/AL-start --layout`, after cost consent. Plain `/AL-start` stays
+in MAIN and calls `planDocsStart`; it never launches this layout agent. All relocation
+instructions below apply ONLY to --layout, not ordinary chats or default startup.
 
 Act on the supplied absolute active workspace, never the installed plugin or its sample
 repository. Hard-stop a repository containing the al-agent-harness plugin manifests.

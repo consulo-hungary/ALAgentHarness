@@ -10,13 +10,44 @@ proof is an accepted opt-out trade-off, not a hidden completion gate.
 | `/AL-brainstorm <idea> --deep` | At most ONE optional Opus consultation, only after estimate/consent; MAIN still asks and writes. |
 | `/AL-implement <spec>` | Explicit optional MAIN code-only step, ONE build after estimate/consent; compiler errors go to the human. |
 | `/AL-implement <spec> --full` | EXPENSIVE opt-in SDD/tests/mutation/DoD/independent review; bundle consent and exact Sandbox permission required. |
-| `/AL-start` | Explicit optional PTE setup with byte-preserving relocation; never automatic feature polish. |
+| `/AL-start` | MAIN docs-only setup: docs/specs, docs/knowledge, docs/generated and thin root instructions; no AL moves or scaffolding. |
+| `/AL-start --layout` | Explicit optional PTE layout and byte-preserving relocation, after cost consent. |
 | `/AL-refactor` | Targeted existing-file fixes and one build; no automatic fixer, tests or independent review. |
 | `/AL-commit` | Explicit local git grouping/commits, preserve unrelated staging; no code edits, push or PR. |
 
 Use slash autocomplete (possibly namespaced). `!AL-start` and other `!` forms are shell
 execution, NOT chat commands. Target the active consuming workspace, not attached plugin
 resources. Never run consuming-project setup on this harness repository.
+
+## Automatic Use Without Commands
+
+Run `/AL-start` once in a consuming repository. It creates missing root `AGENTS.md` and
+`.github/copilot-instructions.md`, routing ordinary feature requests to the installed
+`al-agent-harness` plugin's `bc-workflow` skill. No slash command is needed afterwards.
+A generic local Agent folder is not an always-on instruction location, and `.github/agents/`
+contains selectable agent definitions, not instructions included with every request.
+Do not duplicate the plugin's skills/agents locally or automatically launch specialists.
+
+Default startup creates only the three documentation folders and the two routing files.
+No app/test scaffolding, workspace/settings, hooks, templates, specs or index are generated.
+Existing instructions stay unchanged: review their routing and ask before adding missing
+guidance. Merely finding an existing instruction file does not prove routing is configured.
+`--layout` retains the previous explicit PTE setup. Legacy spec roots remain supported.
+
+Verify in VS Code with the intended Copilot harness selected:
+
+1. Run **Chat: Open Customizations**. Check Instructions for the root routing files and
+   Skills for `bc-workflow`; confirm the plugin is installed and enabled for this workspace.
+2. Start a fresh chat and ask an ordinary feature-design question, without a slash command.
+3. Expand response **References** for the applicable root instructions; inspect tool activity
+   for loading `bc-workflow`. For discovery/loading issues, use **Developer: Open Agent Debug
+   Logs**. Availability alone, or the agent merely claiming to use a skill, is not proof.
+4. If only app/test subfolders are open, open the repository root or check parent-repository
+   instruction discovery for the selected harness. Never silently change security/settings.
+
+See [official VS Code instruction discovery and verification](https://code.visualstudio.com/docs/agent-customization/custom-instructions#_verify-your-instructions).
+Instructions guide chat requests; they neither install/enable a plugin nor guarantee model
+compliance. They are not inline-completion instructions. Skills load only when relevant.
 
 ## Default Feature Flow
 
@@ -31,14 +62,25 @@ resources. Never run consuming-project setup on this harness repository.
 
 The [bc-workflow](skills/bc-workflow/SKILL.md) combines feature design, local project
 discovery, knowledge reuse and short handoffs. The [lean template](templates/spec-TEMPLATE.md)
-has seven sections, at most about 80 lines and 10 manual acceptance checks. No execution
+has mandatory frontmatter plus seven sections, at most about 80 lines total and 10 manual
+acceptance checks. Every spec requires `status: draft | approved | implemented` and
+`date: YYYY-MM-DD` (last updated). Draft on creation, approved only by the developer;
+implemented only after confirmed completion, never mere approval. Refresh date on edits
+and reset to draft if approved behavior changes. No execution
 contract, hashes, allowlist, approvals ledger, locks, labels table or test-per-check table.
 New IDs say `assign at implementation`. Choose a free number above the current maximum;
 no numbering helper. Preserve explicitly established legacy `specs/` without migration.
 
-Read only relevant `docs/knowledge/` text. Convert relevant `.docx` to sibling `.md` once
+Read only relevant `docs/knowledge/` text. Convert relevant `.docx` to `.md` under
+`docs/generated/knowledge/` once
 with consent, preserve the original and reuse the text. If no converter exists, request
 text rather than repeatedly extracting documents. Missing knowledge is valid.
+
+ALL generated supporting files, reports, exports, converted reference text and scratch
+files go ONLY under `docs/generated/`. Specs go in the active spec root. User knowledge
+input stays read-only. Explicit task source/config edits, setup routing files and ordinary
+tool-managed build/cache outputs keep their designated locations. Do not save unrequested
+artifacts; use chat. Sensitive exports must not be committed/shared; report missing ignores.
 
 Default implementation writes only production code, with small targeted edits. No tests,
 test app, publish, mutation, DoD, review agent, symbol downloads or translations. One build

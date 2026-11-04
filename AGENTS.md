@@ -30,7 +30,8 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 
 - Never invent an object, field or enum-value ID. No guess, no "next free number".
 - Never hardcode user-facing text. A literal in `Error(`, `Message(` or `Confirm(` is blocked.
-- Never edit files outside `app/`, `test/` and the feature's spec in `specs/` for an AL task.
+- AL source edits stay in `app/` or `test/`; specs stay in `specs/`. ALL generated
+  supporting files/reports/exports/scratch files go ONLY under `docs/generated/`.
 - Never rewrite git history: no force push, no rebase or reset of commits others may have.
 - Never claim compilation success without a green build. Default implementation has
   ONE build after estimate/consent; return compiler errors to the human, no automatic retry.
@@ -41,6 +42,8 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 
 Skills, agents, commands, the guardrail hook and the MCP servers come from the
 `al-agent-harness` plugin (`plugin/`). This file keeps what is specific to this repo.
+For ordinary BC/AL feature-design requests, load the installed `bc-workflow` skill even
+without slash commands. Other skills load only when relevant; specialists never auto-run.
 
 | When | Skill |
 |------|-------|
@@ -57,6 +60,8 @@ Use a selected mid-tier model in MAIN; cheap tier for mechanical tasks. Opus is 
 MAIN brainstorms with about 10 targeted reads/greps and 15 total tool calls, one batch of
 3-6 questions with defaults (at most two rounds), then writes an at-most-80-line spec and
 one README link line after agreed direction. STOP for developers after spec approval.
+Every spec MUST have `status: draft | approved | implemented` and `date: YYYY-MM-DD`
+(last updated). Developer approval sets approved; confirmed completion sets implemented.
 No feature subagents, repeated reads, hashes, locks or approval bookkeeping by default.
 Before subagents, build/publish or >150-line code steps, estimate cost and ask once.
 
@@ -64,7 +69,8 @@ Before subagents, build/publish or >150-line code steps, estimate cost and ask o
 
 | Task | Command |
 |------|-----|
-| normalize an active consuming AL workspace | `/AL-start` - folder setup, byte-preserving moves and required local configuration; no AL source edits |
+| initialize automatic workflow guidance | `/AL-start` - MAIN docs/specs, docs/knowledge, docs/generated and thin root instructions only |
+| explicitly normalize a consuming AL workspace | `/AL-start --layout` - optional byte-preserving PTE setup; no AL content edits |
 | review and improve existing AL code | `/AL-refactor` - findings and verified behavior-preserving fixes; no layout setup or feature pipeline |
 | design a new feature | `/AL-brainstorm` - MAIN questions + lean numbered spec, then STOP |
 | explicitly implement a spec | `/AL-implement <spec>` - MAIN code only, one build; `--full` is expensive opt-in |

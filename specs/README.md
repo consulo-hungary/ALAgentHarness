@@ -6,8 +6,9 @@ in [plugin/README.md](../plugin/README.md); older indexed harness specs are hist
 ## Default Flow
 
 MAIN brainstorms, asks one batch of questions (at most two rounds), agrees direction and
-writes an at-most-80-line spec. After approval, STOP for developers. No status frontmatter,
-approval hashes, reserved-ID table or automatic implementation is required. Optional
+writes an at-most-80-line spec. After approval, STOP for developers. Mandatory frontmatter:
+`status: draft | approved | implemented` and `date: YYYY-MM-DD` (last updated).
+No approval hashes, reserved-ID table or automatic implementation is required. Optional
 `/AL-implement <spec>` writes code with one build; `--full` is expensive opt-in only.
 
 ## Rules
@@ -22,6 +23,11 @@ approval hashes, reserved-ID table or automatic implementation is required. Opti
 - Mention meaningful dependencies inline in Decisions or Business Rules, no metadata ledger.
 - At most 10 acceptance checks, verifiable by hand. Tests are optional, never one per check.
 - Material open questions must be resolved before implementation.
+- Start as `draft`; only explicit developer approval sets `approved`. Set `implemented`
+  only on developer-confirmed completion or completed requested AI scope with a green build
+  (and any explicitly requested full-mode gates). Refresh date on edits/status changes.
+- Substantive changes to approved behavior reset status to `draft`. Dates are last-updated
+  dates, not inferred original creation or historical approval dates.
 - Write a new feature spec through `/AL-brainstorm`. The workflow adds it to the index.
   Setup, code-only refactoring and commit grouping do not require feature specs.
 - `/AL-brainstorm` uses the lean template, with no Sandbox workflow, build or translation.
@@ -29,7 +35,7 @@ approval hashes, reserved-ID table or automatic implementation is required. Opti
 ## Index
 
 Historical rows below retain their original status metadata. New specs need only one link
-line in this README, no approval/status bookkeeping or changes to old rows.
+line in this README; status/date live in the spec, without a separate approval ledger.
 
 | Spec | Title | Status | Depends on |
 |------|-------|--------|------------|

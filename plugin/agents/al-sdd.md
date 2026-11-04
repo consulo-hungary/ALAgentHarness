@@ -94,10 +94,10 @@ DoD; further independent review needs cost consent, otherwise hand off. Logic ch
 rerun affected reversible mutation -> assertion RED -> restore -> GREEN before DoD.
 Test/scope changes require MAIN approval and tests/stubs -> new assertion RED -> coder.
 Retain coordinator state and immutable research throughout; don't restart the feature.
-An implemented status for D5 is bookkeeping, not a completion claim: review remains
-pending until its actual result. Do not report DONE when a mandatory check/review is
-unrun/failing. Bookkeeping updates alone don't approve substantive changes; record both
-the named spec and current evidence without approval hashes or locks.
+Keep the spec approved while requested gates/review remain pending. Only after all
+requested full-mode gates pass, set status to implemented and refresh its last-updated date.
+Do not report DONE or implemented for unrun/failing requested checks. Metadata updates
+alone never approve substantive changes; no approval hashes or locks.
 
 Return loop evidence, PASS/FAIL per rule/DoD, unrun tests, blockers and DONE or NOT DONE.
 

@@ -20,7 +20,7 @@ test('workflow budgets research, questions, consent and main-chat spec writing',
   for (const phrase of [/10 targeted/, /15 total tool calls/, /3-6 business questions/,
     /At most 2 question rounds/, /MAIN writes the spec/, /ask "write spec\?"/,
     /Never reread/, /cosmetic changes/, /150 lines of code/, /ask once/,
-    /convert to a sibling/, /never re-extract/, /Spec ready for developers/]) {
+    /convert into `docs\/generated\/knowledge\//, /never re-extract/, /Spec ready for developers/]) {
     assert.match(skill, phrase);
   }
   assert.doesNotMatch(skill, /createNumberedSpec|opus-selection|specialist-handoff/);
@@ -45,7 +45,25 @@ test('template has exactly seven lean sections and deferred IDs', () => {
     'Acceptance Checks', 'Out Of Scope / Known Risks', 'Open Questions',
   ]);
   assert.match(template, /assign at implementation/);
+  assert.match(template, /^---\r?\nstatus: draft\r?\ndate: <YYYY-MM-DD>\r?\n---/);
   assert.doesNotMatch(template, /SHA256|Execution contract|Approval|Reserved IDs|## Tests/);
+});
+
+test('spec metadata has an explicit lightweight lifecycle', () => {
+  const workflow = read('skills/bc-workflow/SKILL.md');
+  assert.match(workflow, /`draft` -> `approved` only on explicit developer approval/);
+  assert.match(workflow, /`implemented` only after a developer confirms completion/);
+  assert.match(workflow, /Refresh `date` on spec edits\/status changes/);
+  assert.match(workflow, /reset status to `draft`/);
+  const specs = new URL('../../specs/', import.meta.url);
+  for (const name of fs.readdirSync(specs).filter((file) => /^\d+-.+\.md$/.test(file))) {
+    const metadata = read(`../specs/${name}`).split(/^---\s*$/m)[1];
+    assert.ok(metadata, name);
+    assert.match(metadata, /^status: (draft|approved|implemented)\r?$/m, name);
+    const date = metadata.match(/^date: (\d{4}-\d{2}-\d{2})\r?$/m)?.[1];
+    assert.ok(date && Number.isFinite(Date.parse(date)), name);
+    assert.equal(new Date(date).toISOString().slice(0, 10), date, name);
+  }
 });
 
 test('build defaults to one attempt and fixer has one full-mode cycle', () => {
@@ -88,4 +106,18 @@ test('skill discovery descriptions are short single lines', () => {
     const description = text.match(/^description: "(.+)"\r?$/m)?.[1];
     assert.ok(description && description.length <= 125, entry.name);
   }
+});
+
+test('ordinary requests route through instructions and startup defaults to docs only', () => {
+  const command = read('commands/AL-start.md');
+  assert.match(command, /Default: no subagents/);
+  assert.match(command, /`planDocsStart\(root\)`/);
+  assert.match(command, /Only `--layout` invokes ONE actual `al-start`/);
+  assert.match(command, /docs\/generated\//);
+  const workflow = read('skills/bc-workflow/SKILL.md');
+  assert.match(workflow, /no slash command is required/);
+  assert.match(workflow, /ALL generated supporting files/);
+  const exports = read('skills/chat-export/SKILL.md');
+  assert.match(exports, /Save only under `docs\/generated\//);
+  assert.doesNotMatch(exports, /outside the repo/);
 });

@@ -82,8 +82,10 @@ Build output and `.alpackages/` are git-ignored and never count as permission to
 
 ### 5. D5 - the spec
 
-The named lean spec exists and its `## Open Questions` has no unresolved material question.
-No implemented status, hashes, approval records or ID tables are required.
+The named lean spec exists with mandatory `status: draft | approved | implemented` and
+`date: YYYY-MM-DD` (last updated), and no unresolved material Open Questions. A full-mode
+check requires at least approved status; set implemented only after requested gates pass.
+No hashes, approval ledger or ID tables are required.
 
 ### 6. D6 - tests
 

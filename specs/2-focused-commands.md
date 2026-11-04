@@ -1,6 +1,7 @@
 ---
 title: Four focused plugin commands
 status: approved
+date: 2026-11-04
 kind: harness
 depends-on: []
 source: developer request, 2026-10-31

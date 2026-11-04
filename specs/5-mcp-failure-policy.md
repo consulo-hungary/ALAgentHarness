@@ -1,6 +1,7 @@
 ---
 title: MCP failure policy - three tries, then ask the user
 status: implemented
+date: 2026-11-04
 depends-on: []
 source: developer request, 2026-11-02
 ---

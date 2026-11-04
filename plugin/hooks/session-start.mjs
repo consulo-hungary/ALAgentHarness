@@ -12,7 +12,10 @@ console.log(`AL agent harness (plugin) - always-on rules:
 - Default: selected mid-tier model in MAIN. Cheap tier for mechanical edits. Opus is --deep opt-in only, at most one consultation; never block on model availability.
 - Read the project's AGENTS.md for the affix, the folders and the BC version.
 - Public chat commands: AL-start, AL-refactor, AL-brainstorm, AL-implement, AL-commit. ! syntax is unsafe shell execution, not a chat command.
-- Target the ACTIVE WORKSPACE, never a tagged plugin resource path. AL-start shallow setup preserves AL bytes; never migrate this plugin repository.
+- Target the ACTIVE WORKSPACE. AL-start defaults to docs/specs, docs/knowledge, docs/generated and thin root instruction routing in MAIN; PTE relocation requires --layout. Never migrate this plugin repository.
+- Ordinary feature requests use installed bc-workflow without slash commands; discover skills on demand, never auto-launch specialists. Root AGENTS.md and .github/copilot-instructions.md provide local routing, not a generic Agent folder.
+- Specs MUST have status: draft | approved | implemented and date: YYYY-MM-DD (last updated). Approval updates status/date then STOP; implemented needs confirmed completion, never mere approval.
+- ALL generated supporting files, reports, exports, converted references and scratch files go ONLY under docs/generated/. Specs use the active spec root; knowledge input is read-only. Explicit source/config edits and normal build/cache outputs keep their owning locations.
 - AL-refactor is code-first in existing files, no layout setup or spec gate; uncertain semantics are deferred, sandbox publish is not implicit.
 - AL-brainstorm: MAIN only, no subagents, about 10 targeted reads/greps and 15 total tool calls; 3-6 questions with defaults in one batch, at most two rounds. Ask write spec?, MAIN writes at most 80 lines and one README index line, then STOP. No hashes/locks/approval ledger.
 - AL-implement <spec>: explicit code-only MAIN step, ONE build after estimate/consent, errors returned to human. No tests/test app, publish, mutation, DoD, reviewer, build-fixer, translation or layout polish by default.

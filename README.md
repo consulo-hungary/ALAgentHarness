@@ -104,7 +104,8 @@ historical contracts; [plugin/README.md](plugin/README.md) describes the current
 
 | Command | Does | Does not |
 |---------|------|----------|
-| `/AL-start` | Shallow setup inspection; create the standard folders, move existing project files without changing AL content, update necessary path references and missing local instructions. | Review code, implement features, generate AL or deploy. |
+| `/AL-start` | MAIN creates docs/specs, docs/knowledge, docs/generated and thin root instructions for normal-chat plugin routing. | Move AL, create app/test scaffolding or launch an agent. |
+| `/AL-start --layout` | Explicit optional byte-preserving PTE setup after cost consent. | Change AL content or run builds/tests. |
 | `/AL-refactor` | Inspect existing code deeply, list sourced findings, fix verified behavior-preserving inconsistencies in existing files and validate. | Normalize folders, create a feature spec, silently merge different event/trigger semantics or upgrade BC. |
 | `/AL-brainstorm` | MAIN mid-tier brainstorming, one batched question round (+1 if necessary), at-most-80-line numbered spec + README line, then STOP. | Default Opus/subagents, implementation, builds, tests or translation. |
 | `/AL-implement <spec>` | Optional MAIN code-only implementation and one build after estimate/consent; `--full` opts into expensive SDD. | Default tests, publish, mutation, DoD, reviewer or translation; automatic build repair. |
@@ -129,7 +130,13 @@ Only `/AL-implement <spec> --full` starts SDD after cost consent and exact nonpr
 Sandbox permission. Evidence stays in session, not an inflated spec. Refactoring has no
 automatic fixer or review agent. Setup and commit grouping stay separate.
 
-`AL-start` standardizes consuming AL workspaces to:
+Plain `/AL-start` leaves code/configuration alone and creates only missing documentation
+folders plus root `AGENTS.md` and `.github/copilot-instructions.md`. Those route ordinary
+feature requests to `bc-workflow` without commands; plugin installation/enablement is
+still required. No local Agent folder or copies of plugin resources are needed.
+See [automatic-use verification](plugin/README.md#automatic-use-without-commands).
+
+Only explicit `AL-start --layout` standardizes consuming AL workspaces to:
 
 ```text
 AGENTS.md            Project map and safety rules (preserve existing policies)
@@ -144,7 +151,7 @@ test/                Test application
 test/Tests/          Test source boundary
 docs/                Maintained documentation
 docs/specs/          Feature contracts (existing legacy specs/ stays in place)
-docs/generated/      Requested reusable AI reports (for example Excel or HTML)
+docs/generated/      ONLY output folder for generated supporting files/reports/exports
 docs/knowledge/      User-provided references (external specs, meeting transcripts, etc.)
 rules/               Company rules (empty unless content already exists)
 ```
@@ -161,6 +168,8 @@ Creating an empty `test/Tests/` directory does not invent a test app or prove te
 New specification names are numbered: `1-project-create.md`, `2-carrier-validation.md`,
 `3-next-feature.md`. Allocate the next number above the highest existing numeric prefix;
 do not reuse holes or sort `10` before `2`. Templates and indexes are excluded.
+Every spec MUST include status (`draft`, `approved`, `implemented`) and a last-updated
+date (`YYYY-MM-DD`). Approval changes status/date then STOP; implementation is separate.
 
 ### Use with Copilot
 

@@ -13,7 +13,7 @@ word: **done** or **not done**.
 | D2 | Every new object and field ID was reserved with Ninja. | Actual session Ninja evidence for each declared ID, owning app confirmed, none declared twice |
 | D3 | No hardcoded user-facing text. | no `Error(`, `Message(` or `Confirm(` with a literal (also via `StrSubstNo`) in the changed `.al` files |
 | D4 | Feature changes stay in resolved appRoot/testRoot, specPath and its specIndex row, subject to stronger project instructions. | Task delta from git base + dirty baseline; exact approved allowlist, no layout or blanket docs/CI permission |
-| D5 | The named lean spec exists and has no material open questions. | `## Open Questions`; no approval/status bookkeeping |
+| D5 | The named lean spec exists with status/date and no material open questions. | Valid approved/implemented status, last-updated date; implemented only after requested gates pass |
 | D6 | New business logic has targeted tests; existing regressions may be reused. | Test codeunits cover the agreed full-mode session plan; no one-test-per-criterion requirement |
 | D7 | Every applicable company rule in `rules/` passes. | the `company-rules` skill: PASS / FAIL / N/A per rule file, with `file:line` |
 | D8 | Exact spec tests ran on the explicitly approved NONproduction Sandbox and passed after the last edit. | Matching source hashes/fresh deployed packages and actual named method results; app then test publish only after final-spec target authorization; no skipped tests or invented preservation |

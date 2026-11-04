@@ -69,6 +69,48 @@ function validate(root, moves, requiredDirectories) {
   }
 }
 
+function workflowRouting(specRoot) {
+  return `## Default AI workflow
+
+- For ordinary BC/AL feature requests, use the installed al-agent-harness plugin's bc-workflow skill without requiring a slash command.
+- Brainstorm and write a lean spec in ${specRoot.split(path.sep).join('/')}/, then STOP for developers. Implementation needs an explicit request.
+- Every spec requires status: draft | approved | implemented and date: YYYY-MM-DD (last updated).
+- Load other installed harness skills only when relevant. Do not automatically launch specialist agents; full mode/review needs explicit consent.
+- Generated supporting files, reports, exports, converted reference text and scratch files go ONLY in docs/generated/. Specs go in the active spec root.
+- docs/knowledge/ is read-only user input. Explicitly requested source/config edits stay in their owning project; these root setup instructions are also allowed.
+- If plugin skills are unavailable, report it once; do not copy installed agents/skills or invent a plugin path.
+`;
+}
+
+export function planDocsStart(projectRoot, options = {}) {
+  const root = workspaceRoot(projectRoot);
+  guard(root);
+  const legacy = fs.existsSync(path.join(root, 'specs'));
+  if (legacy && fs.existsSync(path.join(root, 'docs', 'specs')) && !options.specRoot) {
+    throw new Error('BLOCKED: both spec roots exist');
+  }
+  const specRoot = options.specRoot ?? (legacy ? 'specs' : path.join('docs', 'specs'));
+  if (!['specs', path.join('docs', 'specs')].includes(specRoot)) throw new Error('Unexpected spec root');
+  const requiredDirectories = ['docs', specRoot, path.join('docs', 'knowledge'),
+    path.join('docs', 'generated'), '.github'];
+  validate(root, [], requiredDirectories);
+  const candidates = [
+    { file: 'AGENTS.md', content: `# Project AI instructions\n\n${workflowRouting(specRoot)}` },
+    { file: path.join('.github', 'copilot-instructions.md'),
+      content: '# Project instructions\n\nFollow [AGENTS.md](../AGENTS.md) for automatic plugin routing and output rules.\n' },
+  ];
+  const existingInstructions = candidates.filter(({ file }) => fs.existsSync(inside(root, file)))
+    .map(({ file }) => file);
+  for (const file of existingInstructions) {
+    if (!fs.statSync(inside(root, file)).isFile()) throw new Error(`Instruction file conflict: ${file}`);
+  }
+  const files = candidates.filter(({ file }) => !existingInstructions.includes(file));
+  validateFiles(root, files, []);
+  return { root, mode: 'docs', specRoot, files, existingInstructions, moves: [],
+    removeEmptyDirectories: [],
+    directories: requiredDirectories.filter((relative) => !fs.existsSync(inside(root, relative))) };
+}
+
 function setupFiles(root, moves, specRoot) {
   const readMovedJson = (relative) => {
     const move = moves.find((entry) => entry.to === relative);
@@ -97,6 +139,8 @@ function setupFiles(root, moves, specRoot) {
 - Never report compilation success without a green build; no automatic fix/rebuild loop.
 - Never publish without explicit nonproduction Sandbox authorization; no destructive sync or global autoApprove changes.
 - Public chat commands: AL-start, AL-refactor, AL-brainstorm, AL-implement, AL-commit. ! syntax is shell execution.
+
+${workflowRouting(specRoot)}
 `;
   const files = [
     { file: 'AGENTS.md', content: agents },
@@ -190,6 +234,16 @@ export function planStart(projectRoot, options = {}) {
 export function applyStart(plan) {
   const root = workspaceRoot(plan.root);
   if (root !== plan.root) throw new Error('Workspace root changed since plan');
+  if (plan.mode === 'docs') {
+    const docsDirectories = ['docs', plan.specRoot, path.join('docs', 'knowledge'),
+      path.join('docs', 'generated'), '.github'];
+    if (!['specs', path.join('docs', 'specs')].includes(plan.specRoot) ||
+        plan.moves.length || plan.removeEmptyDirectories.length ||
+        plan.directories.some((directory) => !docsDirectories.includes(directory)) ||
+        plan.files.some(({ file }) => !['AGENTS.md', path.join('.github', 'copilot-instructions.md')].includes(file))) {
+      throw new Error('Unexpected docs-only setup operation');
+    }
+  }
   const allowedDirectories = [...directories, path.join('app', 'Features'),
     path.join('app', 'Features', 'Setup'), ...setupDirectories];
   if (!Array.isArray(plan.directories) || plan.directories.some((item) => !allowedDirectories.includes(item))) {

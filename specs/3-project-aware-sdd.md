@@ -1,6 +1,7 @@
 ---
 title: Project-aware test-first SDD (superseded by 4-al-only-harness.md)
 status: implemented
+date: 2026-11-04
 depends-on: []
 source: developer request, 2026-10-31
 ---

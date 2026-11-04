@@ -1,6 +1,7 @@
 ---
 title: AL brainstorm and refactor plugin workflows
 status: draft
+date: 2026-11-04
 kind: harness
 depends-on: []
 source: conversation, 2026-10-30

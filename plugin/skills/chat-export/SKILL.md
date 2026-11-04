@@ -34,7 +34,9 @@ Use what the host offers:
 | Claude Code | the developer runs `/export <file>` (a slash command only they can run), or you read the session file under `~/.claude/projects/<project>/<session-id>.jsonl` |
 | GitHub Copilot (VS Code) | **Chat: Export Chat...** from the command palette, saves JSON |
 
-Save it **outside the repo** (for example `~/Downloads/`), so it can never be committed.
+Save only under `docs/generated/` in the active workspace. Treat exports as sensitive:
+warn the developer not to commit/share them, and report a missing ignore rule rather than
+silently changing repository policy. Never redirect output to Downloads or the repo root.
 
 ### 2. Analyse
 
@@ -50,7 +52,7 @@ Read the transcript and collect, with turn numbers:
 
 ### 3. Write the report
 
-Next to the export, `<name>-diagnose.md`:
+Next to the export under `docs/generated/`, `<name>-diagnose.md`:
 
 ```
 Chat export - <date> - <one-line topic>

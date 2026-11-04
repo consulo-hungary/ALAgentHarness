@@ -54,7 +54,15 @@ permission. Never relaunch a child to relay an answer. No simulated review/test 
 Disable irrelevant servers/providers before starting a fresh chat, using the
 [budget setup](../plugin/README.md#budget-workspace-setup). Autopilot does not disable approvals.
 
-`AL-start` performs consistent folder setup and byte-preserving moves with only necessary
+`AL-start` defaults to MAIN docs-only initialization: docs/specs, docs/knowledge,
+docs/generated and thin root AGENTS/Copilot instructions. No subagent, code moves,
+app/test scaffold, workspace/settings or hooks. Ordinary feature requests then route to
+the installed bc-workflow skill without slash commands. Verify instruction discovery,
+References and actual skill-loading activity using the plugin README's checklist.
+All generated supporting files go ONLY in docs/generated; knowledge input is read-only.
+Specs require status (draft/approved/implemented) and an actual last-updated date.
+
+Only explicit `AL-start --layout` performs consistent folder setup and byte-preserving moves with necessary
 configuration/instruction updates. It never edits AL source or invokes a code review.
 Its PTE skeleton includes root AGENTS/workspace, .github instructions/workflows,
 app configuration/cache/Features/Setup/Translations, test/Tests, docs and rules.
@@ -77,8 +85,10 @@ After installation, verify these cases in an expendable AL project:
 
 1. Exactly five command files are packaged; obsolete `spec`, `sdd`, `done` and `pr`
    command entry points are absent. Verify current installed-cache contents after updating.
-2. Run `AL-start` on root-level AL sources: compare file hashes, check the standard folders
-   and required path references, then rerun and verify no additional changes.
+2. Run `AL-start` on root-level AL sources: verify sources/config are untouched, all three
+   doc folders and missing root routing files exist, and rerunning makes no changes. Check
+   ordinary-chat instruction/skill discovery. Separately test `AL-start --layout` only
+   when explicitly requested, comparing source bytes and idempotence as before.
 3. Run `AL-refactor`: verify findings and safe existing-file fixes without folder setup,
    a feature spec, unrelated behavior changes or automatic sandbox publishing.
 4. Run `AL-brainstorm` with a Lipoti-sized feature: no Opus/subagents, at most two batched

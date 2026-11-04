@@ -1,3 +1,8 @@
+---
+status: draft
+date: <YYYY-MM-DD>
+---
+
 # <Feature Name>
 
 ## Goal

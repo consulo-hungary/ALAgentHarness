@@ -1,6 +1,7 @@
 ---
 title: Business Central AL-only harness with automated smoke tests
 status: implemented
+date: 2026-11-04
 depends-on: []
 source: developer request, 2026-11-02
 ---

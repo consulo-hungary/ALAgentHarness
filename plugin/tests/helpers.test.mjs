@@ -5,7 +5,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
-import { planStart, applyStart } from '../scripts/start-layout.mjs';
+import { planDocsStart, planStart, applyStart } from '../scripts/start-layout.mjs';
 import { inspectGroup, commitGroup } from '../scripts/commit-group.mjs';
 
 const testsRoot = fileURLToPath(new URL('./', import.meta.url));
@@ -20,6 +20,50 @@ function fixture(callback) {
   try { callback(root, put); } finally { fs.rmSync(root, { recursive: true, force: true }); }
 }
 const sha = (data) => createHash('sha256').update(data).digest('hex');
+
+test('docs-only start creates routing and all three doc folders without app scaffolding', () => fixture((root) => {
+  const plan = planDocsStart(root);
+  assert.deepEqual(fs.readdirSync(root), []);
+  const result = applyStart(plan);
+  assert.deepEqual(fs.readdirSync(root).sort(), ['.github', 'AGENTS.md', 'docs']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'docs')).sort(), ['generated', 'knowledge', 'specs']);
+  assert.equal(result.createdFiles.length, 2);
+  const instructions = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
+  assert.match(instructions, /without requiring a slash command/);
+  assert.match(instructions, /bc-workflow skill/);
+  assert.match(instructions, /go ONLY in docs\/generated\//);
+  assert.match(instructions, /status: draft \| approved \| implemented and date:/);
+  assert.deepEqual(planDocsStart(root).files, []);
+  assert.deepEqual(planDocsStart(root).directories, []);
+}));
+
+test('docs-only start preserves sources, configuration, knowledge and existing instructions', () => fixture((root, put) => {
+  const existing = { 'app.json': 'not parsed in docs-only mode', 'Existing.al': 'AL bytes',
+    'AGENTS.md': 'Existing policy', 'custom.code-workspace': '{}',
+    [path.join('.github', 'copilot-instructions.md')]: 'Existing routing',
+    [path.join('docs', 'knowledge', 'input.docx')]: 'user input' };
+  for (const [file, content] of Object.entries(existing)) put(file, content);
+  const plan = planDocsStart(root);
+  assert.equal(plan.existingInstructions.length, 2);
+  assert.deepEqual(plan.moves, []);
+  applyStart(plan);
+  for (const [file, content] of Object.entries(existing)) {
+    assert.equal(fs.readFileSync(path.join(root, file), 'utf8'), content);
+  }
+  assert.ok(!fs.existsSync(path.join(root, 'app')));
+  assert.ok(!fs.existsSync(path.join(root, 'test')));
+}));
+
+test('docs-only start honors legacy specs and rejects conflicts or widened plans', () => fixture((root, put) => {
+  put(path.join('specs', '1-existing.md'), 'keep');
+  const plan = planDocsStart(root);
+  assert.equal(plan.specRoot, 'specs');
+  assert.throws(() => applyStart({ ...plan, directories: [...plan.directories, 'app'] }), /docs-only/);
+  put(path.join('docs', 'generated'), 'conflict');
+  assert.throws(() => applyStart(plan), /Directory conflict/);
+  assert.ok(!fs.existsSync(path.join(root, 'AGENTS.md')));
+  assert.equal(fs.readFileSync(path.join(root, 'specs', '1-existing.md'), 'utf8'), 'keep');
+}));
 
 test('write helpers reject symlink/junction ancestors even within workspace', () => fixture((root, put) => {
   put(path.join('real', 'keep.txt'), 'keep');
