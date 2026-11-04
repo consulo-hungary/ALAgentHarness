@@ -1,10 +1,14 @@
 ---
 name: definition-of-done
-description: "Internal feature DoD evidence check after approved SDD; reports every line, never fixes or infers sandbox permission."
+description: "EXPENSIVE opt-in full-mode DoD evidence report; never a default feature completion gate."
 user-invocable: false
 ---
 
 # Definition of Done
+
+FULL MODE ONLY or an explicit DoD request, after cost consent. Never load on default spec
+approval or `/AL-implement` without flags. Report evidence, no automatic build/publish.
+Use session test/reservation evidence; do not inflate the lean spec with execution tables.
 
 Run every line of the project's `DEFINITION-OF-DONE.md` (none in the project: the plugin's
 `templates/DEFINITION-OF-DONE.md`, path given at session start) and show the evidence. A line without evidence is
@@ -26,7 +30,7 @@ red. You report; you do not fix (fixes belong to the authorized implementation).
   No authorization/tools: report NOT DONE, never infer permission. Reuse fresh final
   SDD deployment/test evidence if source/package hashes and target still match.
 
-- Load [al-project-layout](../al-project-layout/SKILL.md); honor supplied absolute
+- Use supplied paths from [bc-workflow](../bc-workflow/SKILL.md); honor supplied absolute
   projectRoot/appRoot/testRoot/specRoot/specPath/specIndex and stronger project DoD.
   All app/test references below mean those resolved roots.
 - For an orchestrated task, use its start commit AND dirty/untracked content inventory to
@@ -51,7 +55,7 @@ Paste its report line. al-reviewer only reads this supplied evidence, never buil
    `^\s*(table|tableextension|page|pageextension|codeunit|report|reportextension|enum|enumextension|query|xmlport|permissionset|permissionsetextension)\s+(\d+)`
    and field lines `^\s*field\((\d+);` that are added since `BASE`
    (`git diff $BASE -- <file>` for tracked files, the whole file for untracked ones).
-2. Each (type, ID) must be a row in the spec's `## Reserved IDs`.
+2. Each (type, ID) must have actual owning-app Ninja reservation evidence in session.
 3. Validate the owning app and range confirmation from the actual Ninja reservation report.
    Do not read idRanges to assign/guess IDs. Missing reservation/range evidence is red.
 4. No (type, ID) may be declared twice in the same app:
@@ -78,17 +82,17 @@ Build output and `.alpackages/` are git-ignored and never count as permission to
 
 ### 5. D5 - the spec
 
-The spec file exists, its frontmatter has `status: implemented`, `## Open questions` is empty
-(or "none"), and `## Reserved IDs` has rows when D2 found new declarations.
+The named lean spec exists and its `## Open Questions` has no unresolved material question.
+No implemented status, hashes, approval records or ID tables are required.
 
 ### 6. D6 - tests
 
 Only when changed AL in `app/` declares a codeunit, or adds a procedure or event subscriber to
 one. Then: a changed file in `test/` with `Subtype = Test` and `[Test]` methods, and every test
-name from the spec's `## Tests` table appears as a procedure there. Not applicable = green,
+name from the agreed full-mode session test plan appears as a procedure there. Not applicable = green,
 with the reason.
 Behavior-preserving refactors may reuse unchanged existing regression tests named in the
-spec; verify they exist and cover the preservation criteria. Do not require changing a
+session plan; verify they exist and cover the preservation criteria. Do not require changing a
 test solely to satisfy this check. New business behavior still requires matching tests.
 
 ### 7. D7 - company rules
@@ -99,7 +103,7 @@ ago shows up here without any other change.
 
 ### 8. D8 - tests ran and passed
 
-1. Find all exact codeunits/IDs/methods in the spec's test plan, including existing
+1. Find all exact codeunits/IDs/methods in the agreed full-mode session test plan, including existing
    regression tests for a refactor, not only changed tests from D6.
 2. A test run of that codeunit **in this session, after the last change to a `.al` file**
    (for example the final GREEN of the `al-sdd` agent) counts: quote its result.
@@ -115,7 +119,7 @@ ago shows up here without any other change.
    A read-only reviewer never publishes/runs tests; it uses the supplied current evidence.
    No authorization/target: red; return to main developer, never pick a launch.json default.
    No Production/OnPrem, ForceSync/Recreate, permission bypass or autoApprove toggle.
-4. Green = every test named in the spec's `## Tests` ran and passed. A test that did not run
+4. Green = every test named in the full-mode session plan ran and passed. A test that did not run
    is red, not skipped.
 
 For refactor require real baseline app/test builds/tests and post-change equivalence evidence

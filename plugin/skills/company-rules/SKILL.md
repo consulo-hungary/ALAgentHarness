@@ -1,6 +1,6 @@
 ---
 name: company-rules
-description: "Load company AL rules before writing/design/review; report every applicable rule PASS/FAIL for internal DoD D7."
+description: "Apply relevant company AL rules; detailed PASS/FAIL reporting only for explicit review/full-mode DoD."
 user-invocable: false
 ---
 
@@ -18,7 +18,7 @@ at hand.
 
 ## When to use
 
-- Before writing AL (`al-refactor`, `al-sdd`) and designing (`al-brainstorm`).
+- Before writing AL (`AL-implement`, `al-refactor`, `al-sdd`); in design only when a rule affects a decision.
 - Reviewing AL and internal DoD line D7.
 
 ## Procedure
@@ -37,15 +37,16 @@ miss.
 
 ### 3. Read the selected rules in full
 
-The whole article plus its `.good.al` and `.bad.al`. The samples are the authoritative form.
+Use targeted ranges and reuse articles already read this session. Read a sample only when
+the pattern is unclear; respect bc-workflow's research budget. The samples are authoritative.
 Normative are `## Best Practice` and `## Anti Pattern`; the `## Description` says how to check.
 
 ### 4. Apply
 
 - **Writing code:** follow the `.good.al` pattern as you write; never emit the `.bad.al`
   pattern.
-- **Designing:** list each applicable rule in the spec under `## Decisions` as a constraint
-  ("D5 - rule tableextension-pte-suffix: field is \"Preferred Carrier PTE\"").
+- **Designing:** mention only rules that materially affect a business/design decision;
+  do not pad the spec with a rule checklist.
 - **Checking:** run the check from the rule's Description on every changed `.al` file.
 
 ### 5. Report (checking)

@@ -78,7 +78,7 @@ creation, SDD, tests, publish, staging or commits. Invocation is setup authoriza
    or recreate empty placeholders. Preserve all non-empty content byte-for-byte.
    Preserve existing customizations and unrelated/hidden tools/git directories. Move
    only exact discovered AL sources/manifests/resources to the corresponding app/test.
-   Resolve ONE active spec root through [al-project-layout](../skills/al-project-layout/SKILL.md).
+   Resolve ONE active spec root through [bc-workflow](../skills/bc-workflow/SKILL.md)'s optional resolver.
    Legacy `specs/` stays intact; do not create a parallel docs/specs/ or migrate it.
    If both roots exist, main selects once before writes; pass that selection as specRoot
    to the helper. Never merge, renumber or split spec writers. Test may remain

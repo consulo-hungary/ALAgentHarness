@@ -91,9 +91,12 @@ function setupFiles(root, moves, specRoot) {
 - Error, Message and Confirm use Label variables, never literal user-facing text.
 - Reserve object, field and enum-value IDs through al-object-id-assignment (Ninja); never invent IDs.
 - Identify objects as Type ID "Name".
-- Never report AL implementation done without a green build and internal definition-of-done evidence.
+- Default: mid-tier main-chat brainstorming and an at-most-80-line spec, then STOP for developers.
+- AL-implement is explicit code-only opt-in with ONE build after estimate/consent; return errors to the human.
+- Tests, mutation, DoD and independent review require explicit full-mode or individual consent; no AI translations by default.
+- Never report compilation success without a green build; no automatic fix/rebuild loop.
 - Never publish without explicit nonproduction Sandbox authorization; no destructive sync or global autoApprove changes.
-- Exactly four public chat commands: AL-start, AL-refactor, AL-brainstorm, AL-commit. ! syntax is shell execution.
+- Public chat commands: AL-start, AL-refactor, AL-brainstorm, AL-implement, AL-commit. ! syntax is shell execution.
 `;
   const files = [
     { file: 'AGENTS.md', content: agents },

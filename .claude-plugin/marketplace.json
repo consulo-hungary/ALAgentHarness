@@ -8,7 +8,7 @@
     {
       "name": "al-agent-harness",
       "source": "./plugin",
-      "description": "The AL agent harness from Directions EMEA 2026: focused AL commands plus approved test-first SDD for Business Central.",
+      "description": "Budget-first Business Central brainstorming/specs, optional code-only implementation and opt-in full mode.",
       "version": "2.2.0"
     }
   ],

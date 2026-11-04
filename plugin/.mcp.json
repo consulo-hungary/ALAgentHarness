@@ -10,9 +10,11 @@
       "command": "al",
       "args": ["launchmcpserver", "--transport", "stdio"]
     },
-    "bc-code-atlas": {
-      "type": "http",
-      "url": "https://bc-code-atlas.stefanmaron.dev/mcp"
-    }
+  
+         "businesscentral": {
+             "url": "https://mcp.businesscentral.dynamics.com",
+            "type": "http"
+         }
+
   }
 }

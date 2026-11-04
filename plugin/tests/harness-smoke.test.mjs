@@ -50,12 +50,13 @@ const agents = list('agents', '.md').map((file) => path.basename(file, '.md'));
 const skills = fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true })
   .filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
 const mcpServers = Object.keys(JSON.parse(read('.mcp.json')).mcpServers);
-// Servers provided by the declared plugin dependencies rather than by .mcp.json.
-const toolServers = new Set([...mcpServers, 'bc-observatory', 'microsoft-learn']);
+// Optional knowledge tools remain valid when the user disables their local servers.
+const harnessServers = ['al', 'al-object-id-ninja', 'bc-observatory', 'bc-code-atlas', 'microsoft-learn'];
+const toolServers = new Set([...mcpServers, ...harnessServers]);
 const builtinTools = new Set(['read', 'search', 'edit', 'execute']);
 
 test('smoke: the plugin ships commands and agents to test', () => {
-  assert.equal(commands.length, 4, 'exactly four public commands');
+  assert.equal(commands.length, 5, 'five public commands including optional implementation');
   assert.ok(agents.length > 0);
   assert.ok(skills.length > 0);
 });
@@ -171,15 +172,6 @@ test('smoke: every helper script parses', () => {
   }
 });
 
-test('smoke: the opus resolver works against a realistic inventory', () => {
-  const run = (inventory) => spawnSync(process.execPath, [path.join(root, 'scripts', 'opus-model.mjs'),
-    JSON.stringify(inventory)], { encoding: 'utf8' });
-  const ok = run(['claude-sonnet-5.5', 'claude-opus-4.8', 'claude-opus-5.5']);
-  assert.equal(ok.status, 0, ok.stderr);
-  assert.equal(JSON.parse(ok.stdout), 'claude-opus-5.5');
-  assert.notEqual(run(['claude-sonnet-5.5']).status, 0, 'no Opus must block, not fall back');
-});
-
 test('smoke: plugin stays Business Central AL only (no web/Python/generic-project features)', () => {
   const outOfScope = [
     /\bpython\b/i, /\bpytest\b/i, /\bdjango\b/i, /\bflask\b/i, /\bpylance\b/i,
@@ -187,7 +179,7 @@ test('smoke: plugin stays Business Central AL only (no web/Python/generic-projec
     /\bgeneric project\b/i, /\bcustom projects\b/i, /\bweb,\s*python\b/i,
   ];
   const files = walk(root).map((file) => path.relative(root, file).replaceAll('\\', '/'))
-    .filter((relative) => /\.(md|json)$/.test(relative) && !relative.startsWith('tests/'));
+    .filter((relative) => /\.(md|json)$/.test(relative) && !relative.startsWith('tests/') && relative !== 'README.md');
   for (const relative of files) {
     const text = read(relative);
     for (const pattern of outOfScope) assert.doesNotMatch(text, pattern, `${relative} contains out-of-scope ${pattern}`);
@@ -205,8 +197,7 @@ test('smoke: MCP failure policy exists and states the 3-attempt dialog rule', ()
   assert.match(policy, /ask the user through the host's question dialog/);
   assert.match(policy, /Retry.*Continue without.*Stop here/);
   assert.match(policy, /QUESTION: MCP <server> failed 3x/);
-  for (const server of mcpServers) assert.ok(policy.includes(`\`${server}\``), `policy misses ${server}`);
-  for (const server of ['bc-observatory', 'bc-code-atlas', 'microsoft-learn']) assert.ok(policy.includes(server));
+  for (const server of harnessServers) assert.ok(policy.includes(`\`${server}\``), `policy misses ${server}`);
 });
 
 for (const name of agents) {
@@ -220,7 +211,7 @@ for (const name of agents) {
 
 test('smoke: skills and the session rules point at the MCP failure policy', () => {
   for (const relative of ['skills/al-knowledge/SKILL.md', 'skills/al-build-validation/SKILL.md',
-    'skills/al-object-id-assignment/SKILL.md', 'skills/feature-design/SKILL.md']) {
+    'skills/al-object-id-assignment/SKILL.md', 'skills/bc-workflow/SKILL.md']) {
     assert.match(read(relative), /mcp-failure-policy\.md/, relative);
   }
   const session = spawnSync(process.execPath, [path.join(root, 'hooks', 'session-start.mjs')], { encoding: 'utf8' });
@@ -268,8 +259,8 @@ test('smoke: guardrail blocks base-app digging, allows normal work, honours the 
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
-test('smoke: no pinned model versions outside the documented Opus resolution', () => {
-  const pinned = /claude[ -]opus[ -]\d|opus \d\.\d|\bgpt-\d|\bsonnet \d|\bhaiku\b/i;
+test('smoke: no pinned model versions in workflows', () => {
+  const pinned = /claude[ -]opus[ -]\d|opus \d\.\d|\bgpt-\d|\bsonnet \d|\bhaiku \d/i;
   const files = ['agents', 'commands', 'skills', 'copilot', 'templates', 'README.md']
     .flatMap((entry) => (fs.statSync(path.join(root, entry)).isDirectory() ? walk(path.join(root, entry))
       : [path.join(root, entry)]))

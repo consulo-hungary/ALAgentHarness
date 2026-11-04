@@ -1,15 +1,14 @@
 # specs/
 
-One spec per feature. The spec is the contract between the person who wants the feature and
-the agent that builds it, and it travels with the PR.
+One lean spec per feature, primarily for human developers. Use the current budget workflow
+in [plugin/README.md](../plugin/README.md); older indexed harness specs are historical contracts.
 
-## Lifecycle
+## Default Flow
 
-| status | Set by | Means |
-|--------|--------|-------|
-| `draft` | the brainstorming workflow | written, not yet agreed |
-| `approved` | the developer (never an agent on its own) | agreed: this is what gets built |
-| `implemented` | the SDD workflow, after validation | code matches the spec; internal DoD checks it |
+MAIN brainstorms, asks one batch of questions (at most two rounds), agrees direction and
+writes an at-most-80-line spec. After approval, STOP for developers. No status frontmatter,
+approval hashes, reserved-ID table or automatic implementation is required. Optional
+`/AL-implement <spec>` writes code with one build; `--full` is expensive opt-in only.
 
 ## Rules
 
@@ -18,21 +17,19 @@ the agent that builds it, and it travels with the PR.
 - Next number is one above the highest positive numeric prefix, not the number of files.
   Order the index numerically, never renumber completed specs or reuse a deleted number.
   Legacy unnumbered files stay readable; new feature specs are numbered.
-- Objects are named by type and name. IDs are `<Ninja>` until the implementing agent fills
-  `## Reserved IDs`.
-- `depends-on:` lists the specs that must be implemented first. Specs without a dependency
-  between them can be built in parallel, each on its own branch.
-- Acceptance criteria and tests map one-to-one: one test per criterion, one criterion per
-  test.
-- A spec with open questions stays `draft`.
+- Objects are named by type and name. New IDs say `assign at implementation`; Ninja
+  reservations happen only when writing AL, with evidence kept in session.
+- Mention meaningful dependencies inline in Decisions or Business Rules, no metadata ledger.
+- At most 10 acceptance checks, verifiable by hand. Tests are optional, never one per check.
+- Material open questions must be resolved before implementation.
 - Write a new feature spec through `/AL-brainstorm`. The workflow adds it to the index.
   Setup, code-only refactoring and commit grouping do not require feature specs.
-- `/AL-brainstorm` writes AL feature specs and uses the AL template and Sandbox workflow.
+- `/AL-brainstorm` uses the lean template, with no Sandbox workflow, build or translation.
 
 ## Index
 
-Every spec in this folder, one row each. Kept in sync by the feature workflow; the status here
-follows the spec's frontmatter.
+Historical rows below retain their original status metadata. New specs need only one link
+line in this README, no approval/status bookkeeping or changes to old rows.
 
 | Spec | Title | Status | Depends on |
 |------|-------|--------|------------|

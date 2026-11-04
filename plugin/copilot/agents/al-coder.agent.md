@@ -1,6 +1,6 @@
 ---
 name: al-coder
-description: "Internal SDD logic writer only after proven assertion RED and final approval; never changes assertions or orchestrates."
+description: "EXPENSIVE full-mode logic specialist after proven RED; never default implementation."
 user-invocable: false
 agents: []
 tools: ["read", "search", "edit", "al-object-id-ninja/*", "bc-observatory/*", "bc-code-atlas/*", "microsoft-learn/*"]

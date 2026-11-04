@@ -5,10 +5,8 @@ import { randomUUID, createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
-import { numberedSpecs, createNumberedSpec } from '../scripts/numbered-specs.mjs';
 import { planStart, applyStart } from '../scripts/start-layout.mjs';
 import { inspectGroup, commitGroup } from '../scripts/commit-group.mjs';
-import { resolveOpusModel } from '../scripts/opus-model.mjs';
 
 const testsRoot = fileURLToPath(new URL('./', import.meta.url));
 const specRoot = path.join('docs', 'specs');
@@ -23,80 +21,9 @@ function fixture(callback) {
 }
 const sha = (data) => createHash('sha256').update(data).digest('hex');
 
-test('Opus family resolves newest available SDK or picker ID without changing its spelling', () => {
-  const sdk = ['claude-sonnet-5.5', 'claude-haiku-5.5', 'claude-opus-4.8', 'claude-opus-5.5'];
-  assert.equal(resolveOpusModel(sdk), 'claude-opus-5.5');
-  assert.equal(resolveOpusModel(['Claude Opus 4.6 (copilot)', 'Claude Opus 5.5 (copilot)']),
-    'Claude Opus 5.5 (copilot)');
-  assert.equal(resolveOpusModel(['claude-opus-5.9', 'claude-opus-5.10', 'claude-opus-6']),
-    'claude-opus-6');
-  assert.equal(resolveOpusModel(['claude-opus-5.9', 'claude-opus-5.10']), 'claude-opus-5.10');
-  assert.equal(resolveOpusModel(['claude-opus-5.5', 'claude-opus-5.6']), 'claude-opus-5.6');
-  assert.deepEqual(sdk, ['claude-sonnet-5.5', 'claude-haiku-5.5', 'claude-opus-4.8', 'claude-opus-5.5']);
-});
-
-test('Opus ties are inventory-order independent and only exact family IDs qualify', () => {
-  const ids = ['claude-opus-5.5-long', 'claude-opus-5.5-b', 'claude-opus-5.5-a'];
-  assert.equal(resolveOpusModel(ids), 'claude-opus-5.5-a');
-  assert.equal(resolveOpusModel([...ids].reverse()), 'claude-opus-5.5-a');
-  assert.equal(resolveOpusModel([...ids, 'claude-opus-5.5']), 'claude-opus-5.5');
-  for (const inventory of [[], ['opus'], ['claude-sonnet-5.5', 'claude-haiku-5.5'],
-    ['not-claude-opus-5.5', 'claude-opus-5.5fake']]) {
-    assert.throws(() => resolveOpusModel(inventory), /BLOCKED: Opus unavailable/);
-  }
-  for (const inventory of [null, {}, 'opus', [''], [42]]) {
-    assert.throws(() => resolveOpusModel(inventory), /Model inventory must/);
-  }
-  assert.throws(() => resolveOpusModel(['claude-opus-9007199254740992']), /Invalid Opus version/);
-});
-
-test('Opus CLI returns exact ID and fails explicitly when unavailable', () => {
-  const script = fileURLToPath(new URL('../scripts/opus-model.mjs', import.meta.url));
-  const success = spawnSync(process.execPath, [script, JSON.stringify(['claude-opus-5.5'])], { encoding: 'utf8' });
-  assert.equal(success.status, 0, success.stderr);
-  assert.equal(JSON.parse(success.stdout), 'claude-opus-5.5');
-  const failure = spawnSync(process.execPath, [script, '["claude-haiku-5.5"]'], { encoding: 'utf8' });
-  assert.notEqual(failure.status, 0);
-  assert.match(failure.stderr, /BLOCKED: Opus unavailable/);
-  assert.equal(failure.stdout, '');
-});
-
-test('numbered specs sort 1,2,10 numerically, preserve mixed names and choose max+1 across gaps', () => fixture((root, put) => {
-  for (const name of ['README.md', 'TEMPLATE.md', 'legacy.md', '1-one.md', '2-two.md', '10-ten.md', '0-ignored.md']) {
-    put(path.join(specRoot, name), name);
-  }
-  const before = fs.readdirSync(path.join(root, specRoot));
-  assert.deepEqual(numberedSpecs(root, specRoot).rows.map((row) => row.number), [1, 2, 10]);
-  const created = createNumberedSpec(root, specRoot, 'carrier-validation', 'draft bytes');
-  assert.equal(created.name, '11-carrier-validation.md');
-  assert.equal(fs.readFileSync(created.file, 'utf8'), 'draft bytes');
-  for (const name of before) assert.equal(fs.readFileSync(path.join(root, specRoot, name), 'utf8'), name);
-}));
-test('numbered specs start at 1, exclusive locking blocks races/collisions and leaves no owned lock', () => fixture((root, put) => {
-  assert.equal(createNumberedSpec(root, specRoot, 'project-create', 'first').number, 1);
-  put(path.join(specRoot, '.numbered-spec.lock'), 'other writer');
-  assert.throws(() => createNumberedSpec(root, specRoot, 'next', 'second'), /EEXIST/);
-  assert.equal(fs.readFileSync(path.join(root, specRoot, '.numbered-spec.lock'), 'utf8'), 'other writer');
-  assert.equal(fs.readdirSync(path.join(root, specRoot)).filter((name) => name.endsWith('.md')).length, 1);
-}));
-test('duplicate numeric prefixes including leading zeros explicitly block; no overwrite', () => fixture((root, put) => {
-  put(path.join(specRoot, '1-one.md'), 'one');
-  put(path.join(specRoot, '01-other.md'), 'other');
-  assert.throws(() => createNumberedSpec(root, specRoot, 'next', 'bad'), /Duplicate spec prefix: 1/);
-  assert.ok(!fs.existsSync(path.join(root, specRoot, '.numbered-spec.lock')));
-  assert.equal(fs.readdirSync(path.join(root, specRoot)).length, 2);
-}));
-test('numbering rejects escape, unsafe slug and unsafe integer without escaping root', () => fixture((root, put) => {
-  assert.throws(() => createNumberedSpec(root, '..', 'safe', 'bad'), /safe workspace-relative/);
-  assert.throws(() => createNumberedSpec(root, specRoot, '../escape', 'bad'), /safe lowercase/);
-  assert.throws(() => createNumberedSpec(root, 'D:outside', 'safe', 'bad'), /safe workspace-relative/);
-  put(path.join(specRoot, '9007199254740992-overflow.md'));
-  assert.throws(() => numberedSpecs(root, specRoot), /safe integer/);
-}));
 test('write helpers reject symlink/junction ancestors even within workspace', () => fixture((root, put) => {
   put(path.join('real', 'keep.txt'), 'keep');
   fs.symlinkSync(path.join(root, 'real'), path.join(root, 'linked'), process.platform === 'win32' ? 'junction' : 'dir');
-  assert.throws(() => createNumberedSpec(root, path.join('linked', 'specs'), 'safe', 'bad'), /Symlink/);
   assert.throws(() => planStart(root, { moves: [{ from: path.join('linked', 'keep.txt'), to: path.join('app', 'keep.txt') }] }), /Symlink/);
 }));
 

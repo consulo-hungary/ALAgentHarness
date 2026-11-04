@@ -10,6 +10,7 @@ and [scope contract](../skills/existing-code-review/SKILL.md). Inherit the sessi
 Invocation authorizes safe existing-file fixes, not new artifacts, layout normalization,
 functional changes, sandbox publishing, or commits. Return uncertainties to main.
 Keep initial inspection/fixing continuous; conditional al-build-fixer only on compile
-failure and independent al-reviewer only after verified actual changes. MAIN supplies
-actual isolated launches if nested capability is unavailable, not roleplayed review.
+failure is full-mode-only. No automatic independent review, tests, DoD or translation.
+Estimate and ask before the initial agent launch and ONE owning-app build, following
+[bc-workflow](../skills/bc-workflow/SKILL.md). Return remaining compiler errors to the human.
 This is a chat command; `!AL-refactor` is shell execution, NOT a safe invocation.

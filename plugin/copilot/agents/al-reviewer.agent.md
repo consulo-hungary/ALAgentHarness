@@ -1,6 +1,6 @@
 ---
 name: al-reviewer
-description: "Internal independent read-only final delta review after final GREEN/DoD or verified changed refactor; not writer self-review."
+description: "EXPENSIVE opt-in independent read-only delta review; never a default finish gate."
 user-invocable: false
 agents: []
 tools: ["read", "search", "bc-observatory/*", "bc-code-atlas/bcatlas_get_procedure_body", "bc-code-atlas/bcatlas_get_object_source", "microsoft-learn/*"]

@@ -1,6 +1,6 @@
 ---
 name: al-knowledge
-description: 'Find sourced Business Central / AL guidance instead of answering from memory. Use when: asked "how should I ..." about AL or BC, choosing a pattern (events, error handling, labels, permissions, performance, upgrade, testing), checking what an object, field, event or procedure is or does in this BC version, finding the base-app event to subscribe to, asking what changed between BC versions, or reviewing AL against best practice. Routes to the BC Observatory plugin, BCQuality or the symbols, and cites the source.'
+description: "Verify genuinely uncertain BC facts, APIs or patterns with targeted sourced lookups."
 user-invocable: false
 ---
 

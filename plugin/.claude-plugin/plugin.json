@@ -1,7 +1,7 @@
 {
   "name": "al-agent-harness",
   "version": "2.2.0",
-  "description": "Four focused commands for Business Central AL development and approved test-first SDD.",
+  "description": "Budget-first BC brainstorming and lean specs; optional implementation and expensive full mode.",
   "author": {
     "name": "waldo & AJ"
   },

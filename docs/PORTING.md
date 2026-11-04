@@ -24,7 +24,7 @@ without edits.
 
 ## Packaged Copilot workflow
 
-The four commands `AL-start`, `AL-refactor`, `AL-brainstorm` and `AL-commit` target standalone
+The five commands `AL-start`, `AL-refactor`, `AL-brainstorm`, `AL-implement` and `AL-commit` support standalone
 **GitHub Copilot CLI** (`copilot`), not the GitHub repository CLI (`gh`).
 
 The plugin keeps its Claude manifest and canonical agent instructions. A legacy
@@ -38,24 +38,21 @@ is enabled in the intended harness and start a new session. Use slash autocomple
 the installed command spelling; namespaces depend on the host. `!AL-refactor` is not a
 supported plugin command and can be interpreted as a shell request.
 
-Use the four explicit commands for predictable task boundaries. Supporting skills are
+Use the five explicit commands for predictable task boundaries. Supporting skills are
 internal workflow guidance, not additional command entry points. Hosts differ in whether
 internal skills can be hidden from slash menus; discovery is not an enforcement guarantee.
 
-Only `AL-brainstorm` needs an Opus brainstorming subagent and then the approved SDD feature
-loop. Resolve the host's actual Opus model; do not silently fall back to a different family.
-When a child cannot ask the developer directly, main chat relays one question at a time.
-Other commands use small bounded agents with inherited model selection.
-The numbered draft is written by internal `al-spec` after direction agreement; main chat
-still obtains explicit approval. SDD coordinates `al-coder` only after proven RED,
-`al-build-fixer` only for compilation failures, and independent read-only `al-reviewer`
-after the final GREEN. These are not extra slash commands. Preserve coordinator state,
-approval, source hashes and exact test scope across every real invocation.
-If a host cannot nest isolated agents, main chat must dispatch the requested specialist
-and return its evidence to the retained SDD coordinator. Do not replace independent
-review with a writer changing personas. Missing actual delegation remains a blocker.
-If the harness cannot create a real subagent, report the missing capability; do not
-pretend that changing personas is delegation. Autopilot does not disable tool approval.
+`AL-brainstorm` runs in MAIN on the selected mid-tier model: about 10 targeted reads,
+about 15 tool calls, one batch of 3-6 questions with defaults (at most two rounds), then
+MAIN writes a lean spec and stops for developers. No brainstorm/drafter subagent.
+`--deep` permits one optional Opus consultation after estimate/consent; availability
+never blocks work. The host/user selects models; instructions do not change a picker.
+`AL-implement <spec>` is a separate code-only request with ONE build, compiler errors
+returned to the human, no automatic repair/tests/publish/translation/review.
+Only `--full` starts expensive SDD specialists after bundle consent and exact Sandbox
+permission. Never relaunch a child to relay an answer. No simulated review/test evidence.
+Disable irrelevant servers/providers before starting a fresh chat, using the
+[budget setup](../plugin/README.md#budget-workspace-setup). Autopilot does not disable approvals.
 
 `AL-start` performs consistent folder setup and byte-preserving moves with only necessary
 configuration/instruction updates. It never edits AL source or invokes a code review.
@@ -78,22 +75,23 @@ project-owned constraints remain authoritative; instruction changes must be expl
 Static plugin tests verify packaging and instruction contracts, not live LLM behavior.
 After installation, verify these cases in an expendable AL project:
 
-1. Exactly the four command files are packaged; obsolete `spec`, `sdd`, `done` and `pr`
+1. Exactly five command files are packaged; obsolete `spec`, `sdd`, `done` and `pr`
    command entry points are absent. Verify current installed-cache contents after updating.
 2. Run `AL-start` on root-level AL sources: compare file hashes, check the standard folders
    and required path references, then rerun and verify no additional changes.
 3. Run `AL-refactor`: verify findings and safe existing-file fixes without folder setup,
    a feature spec, unrelated behavior changes or automatic sandbox publishing.
-4. Run `AL-brainstorm`: verify real Opus invocation, questions and ascending spec number.
-   Decline final approval and verify no AL edits; then approve with a selected sandbox and
-   inspect actual SDD RED/GREEN/mutation evidence.
-   Verify spec/coder/reviewer activity and absence of build-fixer calls on green builds.
-   Make a blocking reviewer finding in a disposable scenario and verify that fixes
-   invalidate previous evidence and receive fresh validation and independent review.
+4. Run `AL-brainstorm` with a Lipoti-sized feature: no Opus/subagents, at most two batched
+   question rounds, at most about 15 calls and an at-most-80-line spec. Approval must STOP,
+   with no AL/build/publish/translation. Separately invoke `AL-implement <spec>` and verify
+   production code plus exactly one build result, no tests/reviewer/publish/translation.
+   A red build returns errors to the human, not an automatic repair loop. Test expensive
+   `--full` separately only with cost consent and an expendable approved Sandbox.
 5. Run `AL-commit` in a disposable Git repository: verify logical local commits, preserved
    unrelated staging, no secrets, no code edits and no push.
-6. Provide an unavailable Opus model, ambiguous setup collisions, production target or
-   failing validation; verify an actionable blocked result, never substituted success.
+6. An unavailable preferred model must continue with the selected model, never block.
+   Ambiguous setup collisions, production targets and failing validation must be reported
+   honestly, without destructive operations or fabricated success.
 
 Sources:
 
@@ -102,4 +100,4 @@ Sources:
 - [VS Code tool approvals](https://code.visualstudio.com/docs/agents/run/approvals)
 
 The historical demo steps in this repository describe the original Claude-first command
-set. The current plugin intentionally exposes only the four commands above.
+set. The current plugin exposes the five commands above.

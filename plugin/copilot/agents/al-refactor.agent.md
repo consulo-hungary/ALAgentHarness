@@ -5,7 +5,6 @@ user-invocable: false
 ---
 
 Follow [canonical al-refactor](../../agents/al-refactor.md). Inherit the model.
-Keep deep inspection/fixing continuous. Conditional al-build-fixer on compile failure;
-independent al-reviewer once after changed delta verification, none on zero changes.
-MAIN launches actual isolated specialists if nesting is unavailable; retain state,
-otherwise BLOCKED. Return semantic uncertainties and authorization questions to main.
+Keep targeted inspection/fixing continuous. ONE build after estimate/consent; return errors
+to the human. No automatic build-fixer, reviewer, tests, DoD or translation. Return semantic
+uncertainties and authorization questions to main. Use the selected mid-tier model.

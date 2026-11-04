@@ -1,14 +1,16 @@
 ---
 name: al-build-validation
-description: 'Build, diagnose and fix AL code until the build is green. Use when: you created or changed any .al file or app.json, before saying a task is done, before a review or a PR, and when the user asks "does it compile". Provides the build -> diagnostics -> fix -> rebuild loop and a fixed report. Code is not finished until this is green. Does not run tests.'
+description: "Validate changed AL with one build; repair is an explicit full-mode opt-in."
 user-invocable: false
 ---
 
 # AL Build Validation
 
-Code is **not finished until it compiles with zero errors**. Not "it should compile", not
-"the syntax looks right": a build result you can show. And not just a compile: you read the
-diagnostics and **fix** them, then build again.
+Default: ONE build of the touched production app, compile errors only, after cost estimate
+and consent under [bc-workflow](../bc-workflow/SKILL.md). Return remaining compiler errors
+to the human; no automatic repair, second build, tests, publish or symbol downloads.
+Never claim completion without a real zero-error build. Full mode may explicitly authorize
+one compilation fix/rebuild cycle; successful builds never launch a fixer.
 
 ## What this does not prove
 
@@ -20,7 +22,7 @@ sandbox.
 ## When to use
 
 - After writing or changing AL code, `app.json` or a dependency.
-- Before reporting done, before an internal DoD check, before a review or a PR.
+- Follow the caller's single-build or explicitly authorized full-mode validation scope.
 - Diagnostics-only callers build/collect without fixes. The isolated al-reviewer NEVER
   executes this skill; it reads supplied fresh build/diagnostic evidence.
 
@@ -28,15 +30,11 @@ sandbox.
 
 ### 1. Find the build tool
 
-Resolve [al-project-layout](../al-project-layout/SKILL.md) or use the caller's explicit
-packet first. All app/test examples below mean resolved appRoot/testRoot; never reselect
-spec roots. Diagnostics-only/baseline mode fixes nothing and returns errors to main.
-Respect caller scope: relocation/commit validation fixes nothing and never dispatches
-specialists. SDD/refactor may conditionally dispatch [al-build-fixer](../../agents/al-build-fixer.md)
-ONLY after real compilation failure, with errors, safe allowlist and
-[packet](../../references/specialist-handoff.md), when beneficial. Successful builds never
-dispatch it. The fixer runs this loop directly, no nested agents; at most two authorized
-cycles including prior attempts, then BLOCKED. It never runs tests or publishes.
+Use supplied owning-app paths or shallow manifest discovery; no resolver in default mode.
+The remaining dependency-order/repair guidance is FULL MODE ONLY. Only explicit full-mode
+consent may dispatch [al-build-fixer](../../agents/al-build-fixer.md) after actual compiler
+errors, with relevant paths and diagnostics. At most one authorized fix/rebuild cycle,
+including prior attempts, then return remaining errors to the human. No nested agents.
 
 Use what the session exposes; list your tools, do not assume.
 
@@ -46,24 +44,24 @@ Use what the session exposes; list your tools, do not assume.
 | GitHub Copilot in VS Code (AL extension tools) | `al_build` | `al_getdiagnostics` |
 | No MCP tool (fallback) | `al compile` CLI, see below, only after the user approved it | the compiler output |
 
-If the `al` MCP server does not start or a call fails 3 attempts in total, apply the
+If the `al` MCP server does not start, report the build unverified; do not retry the build
+in single-build mode. If full-mode calls fail 3 attempts in total, apply the
 [MCP failure policy](../../references/mcp-failure-policy.md): ask the user (Retry / Continue
 without it / Stop). The CLI fallback is for the build only and never counts as test evidence.
 
-No tool and no `al` CLI? Hard stop, below. The plugin starts the AL MCP server without a
-project: when a tool answers "no projects are loaded", call `al_addproject` for each explicitly
-selected EXISTING folder with an `app.json` and try again. Missing test app is not a request
-to invent one. Build only the supplied existing projects, in actual dependency order.
+No tool and no `al` CLI? Report unverified, below. Register the selected existing app with
+`al_addproject` BEFORE building if required. A failed first build is the single-build result,
+not permission to retry. Never invent a test manifest or load unrelated projects.
 
-### 2. Build in dependency order
+### 2. Build in dependency order (full mode only)
 
 `app/` first, then `test/` (the test app depends on the app): after a green `app/` build, copy
 the `.app` it produced in `app/` into `test/.alpackages/`, or `test/` compiles against an old
 version of the app. Pass `projectPath` as the
 absolute path of the folder that holds `app.json`, with code analysis on. Unresolved symbols
 (`Cannot find type`, missing package): download symbols for that project first
-(`al_downloadsymbols`, or `al downloadsymbols --project <path> --globalsourcesonly`), then
-build again. Never assume a missing symbol is your code's fault, or that it is not.
+only with explicit consent. Default mode reports missing symbols to the human, no download
+or rebuild. Never assume a missing symbol is your code's fault, or that it is not.
 
 CLI fallback, per project, from the repo root:
 
@@ -78,28 +76,27 @@ al compile /project:test /packagecachepath:test/.alpackages /out:test/output.app
 
 `al_getdiagnostics` with `projectPath`, severities error and warning.
 
-- **Errors** - must be fixed. No exceptions.
-- **Warnings** - fix the ones that point at a real problem; list the rest with one line of
-  rationale each.
+- **Errors** - return exact file/line/code/message. Default mode fixes nothing after build.
+- **Warnings** - no cleanup; default mode is compile errors only. Full mode may report them.
 - **Info** - ignore unless it is about code you wrote in this task.
 
-### 4. Fix errors one by one
+### 4. Repair (explicit full mode only)
 
 Read the file around the reported line, fix the cause (not the symptom), rebuild, re-read the
-diagnostics. At most two authorized fix/rebuild cycles; unresolved failures return BLOCKED.
+diagnostics. At most one authorized fix/rebuild cycle; unresolved failures go to the human.
 Validation-only callers never fix. A new file/object also needs explicit scope permission;
 a fix that adds a new object or field goes through
 `al-object-id-assignment` first.
 
-### 5. Stop after two bounded fix cycles
+### 5. Stop after one fix cycle
 
-Two unsuccessful authorized fix cycles: stop, report what you tried and why it fails. Do not delete code,
+One unsuccessful authorized fix cycle: stop, report what you tried and why it fails. Do not delete code,
 suppress analyzers or `#pragma` your way to green.
 
 Errors that name **this app twice** (AL0275, AL0197: the same object in "Directions Demo" and
 "Directions Demo") come from the build server, not from the code: the project is loaded twice
-or a generated `.app` sits in the project folder. Remove that `.app` or add the project again
-and rebuild. Never delete, move or recreate source files to make them go away.
+or a generated `.app` sits in the project folder. In default mode report this diagnosis to
+the human; full-mode repair needs scoped consent. Never delete or recreate source files.
 
 ### 6. Report
 
@@ -114,7 +111,7 @@ Tests: not run (this skill does not run tests)
 
 ## Hard stop
 
-> ⛔ No build tool and no `al` CLI: **STOP** and report that the build could not run. Never
+> No build tool and no `al` CLI: **STOP** and report that the build could not run. Never
 > report "done", "should compile" or "compiles in theory". Unblock with:
 > `dotnet tool install --global microsoft.dynamics.businesscentral.development.tools --prerelease`
 
@@ -126,8 +123,7 @@ Tests: not run (this skill does not run tests)
 
 ## Related
 
-- Run directly or use the conditional fixer handoff above; return actual diagnostics.
-  ANY source edits invalidate old package/GREEN/DoD/review evidence; the coordinator
-  reruns required tests/mutations and fresh independent review, never calls a build tested.
+- Return actual diagnostics; a build is never behavioral test evidence. Full-mode source
+  edits require fresh affected validation, within the consented budget, or human handoff.
 - `al-object-id-assignment` - before writing any new object or field.
-- `definition-of-done` - "build green" is its first line (D1).
+- `definition-of-done` - expensive explicit full-mode check only.

@@ -1,80 +1,35 @@
----
-title: <Feature name>
-status: draft          # draft | approved | implemented
-depends-on: []         # other specs (file names) that must be implemented first
-source: <docs/TASK.md, an issue link, or "conversation">
----
+# <Feature Name>
 
-# <Feature name>
+## Goal
 
-File name: `<next-number>-<feature-kebab-case>.md`. Use one above the highest existing
-positive numeric prefix in the active spec root, not the count of files.
-
-## Context
-
-Why this feature exists, for whom, and what it changes in their day. Two to five sentences.
+<Two or three sentences: who needs this and the intended outcome.>
 
 ## Decisions
 
-What the developer decided in the question round, and what the spec agent decided itself.
-One line each, with the reason.
+- <One line per decision; rejected alternatives only where they matter.>
 
-- D1 - <decision> (asked / decided: <reason>)
+## Business Rules
 
-## Acceptance criteria
+- <Precise inputs, state changes, outcomes and failure behavior. Key UI texts inline.>
 
-Numbered and testable. **One-to-one with `## Tests`**: every criterion has exactly one test,
-every test covers exactly one criterion. A criterion you can not test is not finished.
+| Input / State | Outcome |
+|---------------|---------|
+| <condition> | <observable result> |
 
-- AC1 - Given <state>, when <action>, then <observable result>.
+## Objects To Change / Create
 
-## Objects
+| Object Name | ID | Change |
+|-------------|----|--------|
+| <type and name> | assign at implementation | <one line> |
 
-Every new or extended object, by type and name. The ID is always `<Ninja>`: it is reserved
-at implementation time, never here.
+## Acceptance Checks
 
-| Type | ID | Name | Purpose |
-|------|----|------|---------|
-| tableextension | `<Ninja>` | "DIR <Name>" | extends Table <ID> "<Base table>" |
+1. <Manual, observable check; at most 10 checks total.>
 
-New fields:
+## Out Of Scope / Known Risks
 
-| Table | ID | Field | Type | Notes |
-|-------|----|-------|------|-------|
-| Table <ID> "<Base table>" | `<Ninja>` | "DIR <Field>" | Code[20] | TableRelation, captions |
+- <Excluded behavior or accepted trade-off.>
 
-## Events and extension points
+## Open Questions
 
-Base-app events or objects this feature hooks into, as a symbol path, verified against the
-symbols of the BC version in `app/app.json`.
-
-- `Codeunit <ID> "<Name>"/<EventName>(...)` - why this event
-
-## User-facing text
-
-Every Error, Message and Confirm, as the Label it will become.
-
-| Label | Text | Comment (placeholders) |
-|-------|------|------------------------|
-| <Context>Err | '<text with %1>' | %1 = <meaning> |
-
-## Tests
-
-One row per acceptance criterion, in the same order. Internal DoD checks that every test named
-here exists.
-
-| Test | Covers | Given / When / Then |
-|------|--------|---------------------|
-| <TestName> | AC1 | ... |
-
-## Reserved IDs
-
-Filled by the implementing agent from its Ninja reservations. Internal DoD checks the code
-against this table.
-
-| Type | ID | Name | App |
-|------|----|------|-----|
-
-## Open questions
-
-Anything still undecided. A spec with open questions stays `draft`.
+None.

@@ -5,6 +5,8 @@ argument-hint: "[optional explicit workspace root]"
 
 Target the ACTIVE WORKSPACE/session working directory by default, NOT this tagged plugin
 resource path. Invoke ONE actual `al-start` agent with [canonical instructions](../agents/al-start.md).
+Before launch, estimate the bounded calls/output and ask once under
+[bc-workflow](../skills/bc-workflow/SKILL.md); use the selected mid-tier model.
 Invocation authorizes safe setup; no repeated direction or final-spec approvals.
 Create only the PTE layout and evidence-backed setup configuration described by the agent:
 root AGENTS/workspace, .github, app, test, docs and rules. Preserve existing files,

@@ -2,11 +2,11 @@
 
 A harness for coding agents working on Business Central AL. Clone it, use it Monday.
 
-An agent without a harness writes decent AL - and nothing checks any of it. It picks its own
-object IDs and reserves none, decides the design without asking, never compiles and never runs
-its tests. The model is fine. It just has no idea what we consider done. A harness tells it: the always-on file,
-the guardrails, the skills it loads on demand, the agents that run your process, and a
-definition of done a machine can check.
+The default AI deliverable is now brainstorming and a precise one-page spec, not an
+automated feature pipeline. Developers implement by default. Optional AI implementation
+writes code and runs one build; tests, mutation, DoD and independent review require
+explicit opt-in. Guardrails still protect IDs, user-facing text and existing work.
+See [Budget Workspace Setup](plugin/README.md#budget-workspace-setup) to reduce fixed overhead.
 
 This repo was built live at Directions EMEA 2026 ("Stop Inventing Your Own Way .. Let's Build
 the AL Agent Harness Together"). It is what works for us, not The Truth. Take what you
@@ -15,7 +15,7 @@ believe in, delete the rest.
 ## What is in here
 
 Historical demo: three parts, one commit per step, a branch and a tag per step.
-These tagged steps retain the original commands; the current plugin has the four focused
+These tagged steps retain the original commands; the current plugin has the five focused
 commands documented below.
 
 | Part | Step | Branch / tag | Adds |
@@ -54,10 +54,10 @@ claude plugin install al-agent-harness@al-agent-harness   # brings bc-observator
 | Claude Code | the agent host this repo is built for | <https://claude.com/claude-code> (Copilot: see `docs/PORTING.md`) |
 | VS Code + AL Language extension | editing, F5, symbols | Marketplace: `ms-dynamics-smb.al` |
 | Node.js 20+ | the hook script, `npx` MCP servers | <https://nodejs.org> |
-| `al` CLI | build fallback, AL MCP server, test runs | `dotnet tool install --global microsoft.dynamics.businesscentral.development.tools --prerelease` |
+| `al` CLI (implementation only) | build fallback, AL MCP server; not needed for spec work | `dotnet tool install --global microsoft.dynamics.businesscentral.development.tools --prerelease` |
 | AL Object ID Ninja | object ID reservations | MCP server via `.mcp.json` (npx, nothing to install); VS Code extension `vjeko.vjeko-al-objid` optional |
 | BCQuality | curated BC/AL knowledge and the `al-code-review` skill | in Claude Code: `/plugin marketplace add microsoft/BCQuality` then `/plugin install bcquality@bcquality` |
-| A BC SaaS sandbox | publishing and running tests | fill `environmentName` in `.vscode/launch.json` |
+| A BC SaaS sandbox (explicit publish/tests only) | not needed for default spec or code-only work | fill `environmentName` in `.vscode/launch.json` |
 | Git | `/AL-commit` creates local logical commits | Install Git and configure your own repository identity; no push is implied |
 
 ## Clone it
@@ -96,39 +96,38 @@ The carrier task used in both demo runs is in `docs/TASK.md`. The full talk flow
    markdown. Only agents, commands, MCP config and hooks are tool-specific. See
    `docs/PORTING.md`.
 
-## Four focused commands
+## Budget-First Commands
 
-The plugin provides only these four command entry points. Each acts on the active
-workspace, not the repository containing an attached command. The contract is recorded
-in [specs/2-focused-commands.md](specs/2-focused-commands.md).
+The plugin provides five command entry points. Each acts on the active workspace, not
+the repository containing an attached command. Earlier numbered harness specs describe
+historical contracts; [plugin/README.md](plugin/README.md) describes the current budget defaults.
 
 | Command | Does | Does not |
 |---------|------|----------|
 | `/AL-start` | Shallow setup inspection; create the standard folders, move existing project files without changing AL content, update necessary path references and missing local instructions. | Review code, implement features, generate AL or deploy. |
 | `/AL-refactor` | Inspect existing code deeply, list sourced findings, fix verified behavior-preserving inconsistencies in existing files and validate. | Normalize folders, create a feature spec, silently merge different event/trigger semantics or upgrade BC. |
-| `/AL-brainstorm` | Launch an Opus brainstorming agent, clarify the feature, draft a numbered spec and start SDD after explicit final-spec/sandbox approval. | Silently substitute a different model, implement before approval or deploy to production. |
+| `/AL-brainstorm` | MAIN mid-tier brainstorming, one batched question round (+1 if necessary), at-most-80-line numbered spec + README line, then STOP. | Default Opus/subagents, implementation, builds, tests or translation. |
+| `/AL-implement <spec>` | Optional MAIN code-only implementation and one build after estimate/consent; `--full` opts into expensive SDD. | Default tests, publish, mutation, DoD, reviewer or translation; automatic build repair. |
 | `/AL-commit` | Review uncommitted changes for grouping and create short meaningful local commits with explicit staging. | Edit code, perform a broad refactor, include secrets, rewrite history, push or create a PR. |
 
 Startup and safe refactor fixes do not require the old multi-stage brainstorm/spec pipeline.
-Only new-feature brainstorming continues into SDD. Required host permissions and real
+Brainstorming never continues into implementation automatically. Required host permissions and real
 ambiguities still apply. Missing validation is reported, not converted into success.
 
 ### Focused internal specialists
 
-The four public commands use internal agents only when their phase needs them:
+The feature specialists below are expensive full-mode opt-ins, never default spec/implementation steps:
 
 | Agent | Responsibility |
 |-------|----------------|
-| `al-spec` | Write the agreed numbered draft and index; main chat obtains final approval. |
 | `al-coder` | Implement approved logic after an executed assertion failure proves RED. |
-| `al-build-fixer` | Diagnose compilation failures with bounded, behavior-preserving fixes; not run on successful builds. |
+| `al-build-fixer` | Full mode only: one compiler fix/rebuild cycle, then human handoff. |
 | `al-reviewer` | Independent read-only review of the final validated delta; never review its own edits. |
 | `al-sdd` | Coordinate tests/stubs, RED, implementation, GREEN, reversible mutation, RED, restore and final GREEN. |
 
-SDD carries the same approved scope and source/package/test evidence across actual
-handoffs. Final review is independent; any subsequent edits require fresh validation
-and review. Refactoring can use build-failure support and final delta review without
-entering a feature-spec/SDD pipeline. Setup and commit grouping do not launch these roles.
+Only `/AL-implement <spec> --full` starts SDD after cost consent and exact nonproduction
+Sandbox permission. Evidence stays in session, not an inflated spec. Refactoring has no
+automatic fixer or review agent. Setup and commit grouping stay separate.
 
 `AL-start` standardizes consuming AL workspaces to:
 
@@ -174,13 +173,13 @@ copilot plugin list
 
 For VS Code, use **Chat: Install Plugin from Source** and select the local `plugin`
 directory. Enable it for the intended harness, then start a fresh chat and use slash
-autocomplete to find **AL-start**, **AL-refactor**, **AL-brainstorm** or **AL-commit**. Use the namespace shown by
+autocomplete to find **AL-start**, **AL-refactor**, **AL-brainstorm**, **AL-implement** or **AL-commit**. Use the namespace shown by
 your host if it does not expose a bare command. Do not use `!AL-refactor`: `!` can
 mean shell execution rather than a plugin command.
 
-Brainstorming explicitly requires an available Opus model and actual agent invocation.
-If the host cannot provide it, report that capability gap rather than substituting.
-Other command agents inherit the host's model choice. Explicit commands keep the task
-boundary clear and avoid spending credits on unrelated phases.
+Select a mid-tier main-chat model; a cheap tier suits mechanical edits. `--deep` permits
+at most one optional Opus consultation after estimate/consent. No model availability
+blocker: use what is selected. Spec work normally needs no MCP servers. Refresh the
+installed plugin and start a fresh chat to remove stale instructions/tool catalogs.
 See [plugin/README.md](plugin/README.md) for workflow details and smoke tests, and
 [docs/PORTING.md](docs/PORTING.md) for compatibility.

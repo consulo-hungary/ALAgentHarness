@@ -1,6 +1,6 @@
 ---
 name: al-object-id-assignment
-description: 'Reserve object, field and enum-value IDs with AL Object ID Ninja BEFORE writing the AL artifact, and release IDs that end up unused. Use when: creating any new AL object (table, tableextension, page, pageextension, codeunit, report, enum, enumextension, query, xmlport, permissionset, ...), adding a field through a tableextension, adding an enum value through an enumextension, or deleting/reverting an object whose ID you reserved. Never pick an ID yourself.'
+description: "Reserve new AL object/extension-field/enum-value IDs with Ninja before writing; release unused IDs."
 user-invocable: false
 ---
 
@@ -93,8 +93,8 @@ Object ID reservation
   Released:  50104 (codeunit dropped from the design)
 ```
 
-When a spec is in play, copy this list into the spec's `## Reserved IDs` table: that table
-is what the internal DoD checks the code against.
+Keep reservation evidence in session; full-mode DoD reads that evidence. Never add a
+reserved-ID table or bookkeeping to the lean spec.
 
 ## Hard stop - no fallback
 
@@ -114,7 +114,7 @@ branch.
 
 ## Never
 
-- Never write a concrete ID into a spec. Specs say `<Ninja>`; a guessed ID in a spec becomes
+- Never guess an ID in a spec. New IDs say `assign at implementation`; a guessed ID becomes
   a guessed ID in the code.
 - Never treat a green build as proof the ID was free: the collision is with a reservation,
   not with your workspace.
@@ -123,5 +123,4 @@ branch.
 
 - `al-build-validation` - run after the artifact is written.
 - `.mcp.json` - registers the Ninja MCP server for Claude Code.
-- The resolved active specRoot's `TEMPLATE.md` (see `al-project-layout`) - the
-  `## Reserved IDs` table this skill fills (step 06).
+- [Lean template](../../templates/spec-TEMPLATE.md) - IDs assigned at implementation, not design.

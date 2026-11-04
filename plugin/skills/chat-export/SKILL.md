@@ -1,7 +1,7 @@
 ---
 name: chat-export
 user-invocable: false
-description: 'Export an agent session and turn it into a short diagnose report for whoever maintains the harness: which skills, agents and MCP servers were available versus actually used, which tools failed, where the agent looped. Use when: "export this chat", "why did it not use the skill", "send this session to the devlead", the developer says the tooling (not the code) is failing them. Never runs unasked.'
+description: "Export this chat and diagnose harness/tooling usage only on explicit request."
 ---
 
 # Chat Export

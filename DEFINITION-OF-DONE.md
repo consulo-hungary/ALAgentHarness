@@ -1,5 +1,8 @@
 # Definition of Done
 
+EXPENSIVE opt-in full mode only, never a default brainstorm/spec or code-only gate.
+Reservation/test evidence stays in session; do not expand the lean spec with bookkeeping.
+
 A change is done when every line below is green. Every line has a check a machine can run, so
 "done" is a fact you can show, not a feeling. The internal `definition-of-done` skill runs
 these checks for feature SDD and answers with one
@@ -8,13 +11,13 @@ word: **done** or **not done**.
 | # | Done means | Proven by |
 |---|------------|-----------|
 | D1 | Both apps build with zero errors. | `al_build` + `al_getdiagnostics` on `app/` then `test/` (or `al compile`) |
-| D2 | Every new object and field ID was reserved with Ninja. | IDs declared in the changed `.al` files = the spec's `## Reserved IDs`, each inside its app's `idRanges`, none declared twice |
+| D2 | Every new object and field ID was reserved with Ninja. | Actual session Ninja evidence, owning app confirmed, none declared twice; never derive IDs from idRanges |
 | D3 | No hardcoded user-facing text. | no `Error(`, `Message(` or `Confirm(` with a literal (also via `StrSubstNo`) in the changed `.al` files |
 | D4 | Nothing changed outside `app/`, `test/` and the feature's spec (plus its row in the `specs/README.md` index). | `git diff --name-only <base>` + untracked files |
-| D5 | The spec exists, is `implemented` and has no open questions. | the spec's frontmatter and `## Open questions` |
-| D6 | New business logic has tests, one per acceptance criterion. | a changed `Subtype = Test` codeunit in `test/` that contains every test named in the spec's `## Tests` |
+| D5 | The named lean spec exists with no material open questions. | `## Open Questions`, no status/approval bookkeeping |
+| D6 | New business logic has targeted tests. | Test codeunits cover the agreed full-mode session plan, no one-test-per-criterion requirement |
 | D7 | Every applicable company rule in `rules/` passes. | the `company-rules` skill: PASS / FAIL / N/A per rule file, with `file:line` |
-| D8 | The tests ran on the sandbox and passed, after the last code change. | a test run (`runTests`, `al_run_tests` or `al runtests`) of the spec's test codeunit in this session, after publishing: every test from the spec's `## Tests` ran, all passed |
+| D8 | Tests passed on the explicitly approved nonproduction Sandbox after the last edit. | Fresh matching deployment and actual named test results for the full-mode session plan |
 
 ## What this proves
 
