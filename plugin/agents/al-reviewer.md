@@ -29,4 +29,4 @@ Then report reviewed delta, checks, gaps and verdict.
 No findings is not a substitute for missing checks. Return blocking fixes to the coordinator;
 after source edits it must refresh affected validation within consent or hand off to the human.
 
-MCP server missing or failing (3 attempts in total): stop, return `QUESTION: MCP <server> failed 3x: <tool>: <error>` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).
+MCP server missing or failing (about 5 failing requests without improvement): stop, return `QUESTION: MCP <server> failed ~5x: <tool>: <error>; done: ...; check manually: ...` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

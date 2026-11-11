@@ -17,7 +17,7 @@ agent writes and what internal DoD checks. No prompt surgery, no skill edits.
 ## How the harness uses this folder
 
 - The `company-rules` skill lists this folder every time; it never works from a fixed list.
-- Agents that write AL (`al-refactor`, `al-sdd`) apply every applicable rule while writing.
+- Agents that write AL (`al-coder`, `al-sdd`) apply every applicable rule while writing.
 - Internal DoD line D7 and refactor review report PASS / FAIL per rule.
 - A rule here wins over general guidance (BCQuality, Microsoft Learn) when they disagree.
 

@@ -8,7 +8,7 @@ user-invocable: false
 
 FULL MODE ONLY or an explicit DoD request, after cost consent. Never load on default spec
 approval or `/AL-implement` without flags. Report evidence, no automatic build/publish.
-Use session test/reservation evidence; do not inflate the lean spec with execution tables.
+Use session test/index evidence; do not inflate the lean spec with execution tables.
 
 Run every line of the project's `DEFINITION-OF-DONE.md` (none in the project: the plugin's
 `templates/DEFINITION-OF-DONE.md`, path given at session start) and show the evidence. A line without evidence is
@@ -49,19 +49,21 @@ Follow `al-build-validation` on `app/` then `test/`, or reuse actual current fin
 whose source/package hashes and analyzer scope still match. Green = zero errors in both.
 Paste its report line. al-reviewer only reads this supplied evidence, never builds.
 
-### 2. D2 - every new ID reserved
+### 2. D2 - every new ID is unique and in range
 
 1. New declarations in changed AL: object lines
    `^\s*(table|tableextension|page|pageextension|codeunit|report|reportextension|enum|enumextension|query|xmlport|permissionset|permissionsetextension)\s+(\d+)`
    and field lines `^\s*field\((\d+);` that are added since `BASE`
    (`git diff $BASE -- <file>` for tracked files, the whole file for untracked ones).
-2. Each (type, ID) must have actual owning-app Ninja reservation evidence in session.
-3. Validate the owning app and range confirmation from the actual Ninja reservation report.
-   Do not read idRanges to assign/guess IDs. Missing reservation/range evidence is red.
+2. Refresh the index with [al-object-index](../al-object-index/SKILL.md); each (type, ID) must appear in
+   `object-index.json` with no `duplicate-id`, `duplicate-member-id`, `out-of-range` or
+   `member-out-of-range` issue for the owning app.
+3. The script's `idUsage` and `issues` are the evidence; do not read idRanges to guess IDs.
+   Missing index or an error-level ID issue is red.
 4. No (type, ID) may be declared twice in the same app:
    `grep -rniE "^\s*<type>\s+<id>\b" <app>/`.
 
-Evidence: a table with ID, type, file, reserved yes/no, in range yes/no.
+Evidence: a table with ID, type, file, unique yes/no, in range yes/no.
 
 ### 3. D3 - no literal UI text
 
@@ -136,7 +138,7 @@ build alone.
 ```
 Definition of Done - <resolved specPath>   base <short sha>   files <n>
   [x] D1 build green          app 0 errors / test 0 errors (al_build)
-  [x] D2 IDs reserved         5 of 5 in Reserved IDs, all in range, no duplicates
+  [x] D2 IDs unique        5 of 5 in the object index, all in range, no duplicates
   [ ] D3 no literal UI text   app/src/DIRCarrierCheck.Codeunit.al:14  Error('No carrier')
   [x] D4 scope                9 task files within resolved roots/exact approved allowlist
   [x] D5 spec                 implemented, 0 open questions
@@ -160,7 +162,7 @@ the red lines. Nothing is "mostly done".
 ## Related
 
 - `al-build-validation` - D1.
-- `al-object-id-assignment` - fills the `## Reserved IDs` table D2 compares against.
+- `al-object-index` - supplies the ID evidence D2 checks.
 - `company-rules` - D7.
 - [al-reviewer](../../agents/al-reviewer.md) independently reviews the final SDD delta
   AFTER final GREEN and current DoD. The coordinator/MAIN launches it for real, never

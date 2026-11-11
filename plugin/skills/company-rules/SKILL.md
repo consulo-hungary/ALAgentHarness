@@ -18,7 +18,7 @@ at hand.
 
 ## When to use
 
-- Before writing AL (`AL-implement`, `al-refactor`, `al-sdd`); in design only when a rule affects a decision.
+- Before writing AL (`AL-implement`, `al-sdd`); in design only when a rule affects a decision.
 - Reviewing AL and internal DoD line D7.
 
 ## Procedure

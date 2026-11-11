@@ -51,12 +51,12 @@ const skills = fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true }
   .filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
 const mcpServers = Object.keys(JSON.parse(read('.mcp.json')).mcpServers);
 // Optional knowledge tools remain valid when the user disables their local servers.
-const harnessServers = ['al', 'al-object-id-ninja', 'bc-observatory', 'bc-code-atlas', 'microsoft-learn'];
+const harnessServers = ['al', 'bc-observatory', 'bc-code-atlas', 'microsoft-learn'];
 const toolServers = new Set([...mcpServers, ...harnessServers]);
 const builtinTools = new Set(['read', 'search', 'edit', 'execute']);
 
 test('smoke: the plugin ships commands and agents to test', () => {
-  assert.equal(commands.length, 5, 'five public commands including optional implementation');
+  assert.equal(commands.length, 5, 'five public commands: init, brainstorm, implement, review, commit');
   assert.ok(agents.length > 0);
   assert.ok(skills.length > 0);
 });
@@ -134,38 +134,10 @@ for (const skill of skills) {
   });
 }
 
-test('smoke: hooks resolve to real scripts and run cleanly', () => {
-  const registrations = [
-    ['copilot/hooks.json', /\$\{PLUGIN_ROOT\}\/([^"]+)/],
-    ['hooks/hooks.json', /\$\{CLAUDE_PLUGIN_ROOT\}\/([^"]+)/],
-  ];
-  let count = 0;
-  for (const [config, pattern] of registrations) {
-    const scripts = [...JSON.stringify(JSON.parse(read(config))).matchAll(new RegExp(pattern, 'g'))]
-      .map((match) => match[1].replace(/\\$/, ''));
-    assert.ok(scripts.length >= 2, `${config}: expected session-start and guardrail hooks`);
-    for (const script of new Set(scripts)) {
-      assert.ok(exists(script), `${config}: missing ${script}`);
-      const result = spawnSync(process.execPath, [path.join(root, script)], {
-        input: '{}', encoding: 'utf8', env: { ...process.env, PLUGIN_ROOT: root, CLAUDE_PLUGIN_ROOT: root },
-      });
-      assert.equal(result.status, 0, `${script} failed: ${result.stderr}`);
-      count += 1;
-    }
-  }
-  assert.ok(count >= 4);
-});
-
-test('smoke: the session-start rules name every public command', () => {
-  const result = spawnSync(process.execPath, [path.join(root, 'hooks', 'session-start.mjs')], { encoding: 'utf8' });
-  assert.equal(result.status, 0);
-  for (const file of commands) assert.ok(result.stdout.includes(path.basename(file, '.md')), file);
-});
-
 test('smoke: every helper script parses', () => {
-  const scripts = ['scripts', 'hooks', 'copilot', 'skills'].flatMap((directory) => walk(path.join(root, directory)))
+  const scripts = ['scripts', 'templates'].flatMap((directory) => walk(path.join(root, directory)))
     .filter((file) => file.endsWith('.mjs'));
-  assert.ok(scripts.length >= 8);
+  assert.ok(scripts.length >= 5);
   for (const script of scripts) {
     const result = spawnSync(process.execPath, ['--check', script], { encoding: 'utf8' });
     assert.equal(result.status, 0, `${script}: ${result.stderr}`);
@@ -190,14 +162,18 @@ test('smoke: plugin stays Business Central AL only (no web/Python/generic-projec
   }
 });
 
-// MCP failure policy: three tries, then ask the user; never dig through the file system.
-test('smoke: MCP failure policy exists and states the 3-attempt dialog rule', () => {
+
+// MCP failure policy: about five failures, then halt with a progress statement and ask the user.
+test('smoke: MCP failure policy states the halt-after-five rule with progress statement', () => {
   const policy = read('references/mcp-failure-policy.md').replace(/\s+/g, ' ');
-  assert.match(policy, /at most \*\*3 attempts in total\*\*/);
-  assert.match(policy, /ask the user through the host's question dialog/);
+  assert.match(policy, /about \*\*5 failing requests without improvement\*\*/);
+  assert.match(policy, /short progress statement/);
+  assert.match(policy, /Check manually/);
   assert.match(policy, /Retry.*Continue without.*Stop here/);
-  assert.match(policy, /QUESTION: MCP <server> failed 3x/);
+  assert.match(policy, /QUESTION: MCP <server> failed ~5x/);
+  assert.doesNotMatch(policy, /ninja/i);
   for (const server of harnessServers) assert.ok(policy.includes(`\`${server}\``), `policy misses ${server}`);
+  assert.doesNotMatch(JSON.stringify(Object.keys(JSON.parse(read('.mcp.json')).mcpServers)), /ninja/i);
 });
 
 for (const name of agents) {
@@ -209,24 +185,35 @@ for (const name of agents) {
   });
 }
 
-test('smoke: skills and the session rules point at the MCP failure policy', () => {
+test('smoke: skills point at the MCP failure policy and no skill mentions Ninja as a tool', () => {
   for (const relative of ['skills/al-knowledge/SKILL.md', 'skills/al-build-validation/SKILL.md',
-    'skills/al-object-id-assignment/SKILL.md', 'skills/bc-workflow/SKILL.md']) {
+    'skills/al-coding-principles/SKILL.md', 'skills/bc-workflow/SKILL.md']) {
     assert.match(read(relative), /mcp-failure-policy\.md/, relative);
   }
-  const session = spawnSync(process.execPath, [path.join(root, 'hooks', 'session-start.mjs')], { encoding: 'utf8' });
-  assert.match(session.stdout, /3 attempts/);
-  assert.match(session.stdout, /Retry \/ Continue without <server> \/ Stop/);
-  assert.match(session.stdout, /Never compensate on the file system/);
+  for (const file of walk(path.join(root, 'skills')).filter((entry) => entry.endsWith('.md'))) {
+    const text = fs.readFileSync(file, 'utf8');
+    assert.doesNotMatch(text.replace(/no AL Object ID Ninja/g, ''), /ninja/i, file);
+  }
 });
 
-test('smoke: guardrail blocks base-app digging, allows normal work, honours the user override', () => {
-  const run = (command, cwd = root, relative = 'hooks/no-base-app-digging.mjs', copilot = false) => spawnSync(
-    process.execPath, [path.join(root, relative)], {
-      input: JSON.stringify(copilot ? { toolName: 'powershell', toolArgs: { command }, cwd }
-        : { tool_name: 'Bash', tool_input: { command }, cwd }),
-      encoding: 'utf8',
-    });
+test('smoke: the plugin registers no hooks; /AL-init deploys them from templates', () => {
+  for (const relative of ['hooks', 'copilot/hooks.json', 'hooks/hooks.json']) assert.ok(!exists(relative), relative);
+  assert.equal(JSON.parse(read('plugin.json')).hooks, undefined);
+  for (const relative of ['templates/hooks/al-guardrails.mjs', 'templates/hooks/al-guardrails.json',
+    'templates/hooks/al-docs-check.mjs', 'templates/git/pre-commit', 'templates/AGENTS.md',
+    'templates/copilot-instructions.md', 'templates/project-overview.md', 'templates/technical-overview.md',
+    'scripts/Get-ALObjectIndex.ps1', 'scripts/al-init.mjs']) {
+    assert.ok(exists(relative), `missing ${relative}`);
+  }
+});
+
+test('smoke: deployed guardrail blocks base-app digging, allows normal work, honours the user override', () => {
+  const script = path.join(root, 'templates', 'hooks', 'al-guardrails.mjs');
+  const run = (command, cwd = root, copilot = false) => spawnSync(process.execPath, [script], {
+    input: JSON.stringify(copilot ? { toolName: 'powershell', toolArgs: JSON.stringify({ command }), cwd }
+      : { tool_name: 'Bash', tool_input: { command }, cwd }),
+    encoding: 'utf8',
+  });
   const blocked = [
     'Expand-Archive -Path .\\.alpackages\\Microsoft_Base Application.app -DestinationPath C:\\tmp\\base',
     'unzip Base.app -d base',
@@ -236,19 +223,20 @@ test('smoke: guardrail blocks base-app digging, allows normal work, honours the 
     'rg -n "OnAfterPost" C:\\tmp\\BaseApplication',
   ];
   for (const command of blocked) {
-    const result = run(command);
-    assert.equal(result.status, 2, `should block: ${command}`);
-    assert.match(result.stderr, /3 attempts/);
-    assert.match(result.stderr, /ask the user/);
-    const copilot = run(command, root, 'copilot/no-base-app-digging.mjs', true);
-    assert.equal(copilot.status, 0);
-    assert.equal(JSON.parse(copilot.stdout).permissionDecision, 'deny', `copilot should deny: ${command}`);
+    for (const copilot of [false, true]) {
+      const result = run(command, root, copilot);
+      assert.equal(result.status, 2, `should block: ${command}`);
+      assert.match(result.stderr, /about 5 failed requests/);
+      assert.match(result.stderr, /progress statement/);
+      assert.equal(JSON.parse(result.stdout).permissionDecision, 'deny');
+    }
   }
   for (const command of ['git status', 'node --test plugin/tests', 'Get-ChildItem app\\src',
     'al compile /project:app /packagecachepath:app/.alpackages /out:app/output.app',
     'Expand-Archive notes.txt', 'curl https://example.com/api']) {
-    assert.equal(run(command).status, 0, `should allow: ${command}`);
-    assert.equal(run(command, root, 'copilot/no-base-app-digging.mjs', true).stdout, '', `copilot allow: ${command}`);
+    const result = run(command);
+    assert.equal(result.status, 0, `should allow: ${command}`);
+    assert.equal(result.stdout, '');
   }
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-fallback-'));
   try {
@@ -259,6 +247,31 @@ test('smoke: guardrail blocks base-app digging, allows normal work, honours the 
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+test('smoke: deployed guardrail blocks literal UI text in .al writes only', () => {
+  const script = path.join(root, 'templates', 'hooks', 'al-guardrails.mjs');
+  const run = (event) => spawnSync(process.execPath, [script], { input: JSON.stringify(event), encoding: 'utf8' });
+  const bad = "if X then Error('Something failed');";
+  const write = (filePath, content, key = 'content') => ({ tool_name: 'Write', tool_input: { file_path: filePath, [key]: content } });
+  for (const event of [
+    write('app/src/A.Codeunit.al', bad),
+    write('app/src/A.Codeunit.al', bad, 'new_string'),
+    { toolName: 'create_file', toolArgs: JSON.stringify({ filePath: 'app/a.al', content: "Message(StrSubstNo('x %1', Y));" }) },
+    { tool_name: 'Bash', tool_input: { command: `cat > app/a.al <<'EOF'\n${bad}\nEOF` } },
+  ]) {
+    const result = run(event);
+    assert.equal(result.status, 2, JSON.stringify(event));
+    assert.match(result.stderr, /Declare a Label/);
+  }
+  for (const event of [
+    write('app/src/A.Codeunit.al', 'Error(NoCarrierErr);'),
+    write('rules/x.bad.al', bad),
+    write('notes.md', bad),
+    write('app/src/A.Codeunit.al', `// ${bad}`),
+  ]) assert.equal(run(event).status, 0, JSON.stringify(event));
+  assert.equal(spawnSync(process.execPath, [script], { input: 'not json', encoding: 'utf8' }).status, 0);
+});
+
 test('smoke: no pinned model versions in workflows', () => {
   const pinned = /claude[ -]opus[ -]\d|opus \d\.\d|\bgpt-\d|\bsonnet \d|\bhaiku \d/i;
   const files = ['agents', 'commands', 'skills', 'copilot', 'templates', 'README.md']

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Installed by /AL-init: keeps docs/knowledge/technical-overview.md current at every commit.
+[ -f .github/hooks/al-docs-check.mjs ] || exit 0
+exec node .github/hooks/al-docs-check.mjs

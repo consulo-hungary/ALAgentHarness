@@ -45,7 +45,7 @@ Use what the session exposes; list your tools, do not assume.
 | No MCP tool (fallback) | `al compile` CLI, see below, only after the user approved it | the compiler output |
 
 If the `al` MCP server does not start, report the build unverified; do not retry the build
-in single-build mode. If full-mode calls fail 3 attempts in total, apply the
+in single-build mode. If full-mode calls keep failing (about 5 without improvement), apply the
 [MCP failure policy](../../references/mcp-failure-policy.md): ask the user (Retry / Continue
 without it / Stop). The CLI fallback is for the build only and never counts as test evidence.
 
@@ -86,7 +86,7 @@ Read the file around the reported line, fix the cause (not the symptom), rebuild
 diagnostics. At most one authorized fix/rebuild cycle; unresolved failures go to the human.
 Validation-only callers never fix. A new file/object also needs explicit scope permission;
 a fix that adds a new object or field goes through
-`al-object-id-assignment` first.
+`al-object-index` first.
 
 ### 5. Stop after one fix cycle
 
@@ -125,5 +125,5 @@ Tests: not run (this skill does not run tests)
 
 - Return actual diagnostics; a build is never behavioral test evidence. Full-mode source
   edits require fresh affected validation, within the consented budget, or human handoff.
-- `al-object-id-assignment` - before writing any new object or field.
+- `al-object-index` - before writing any new object or field.
 - `definition-of-done` - expensive explicit full-mode check only.

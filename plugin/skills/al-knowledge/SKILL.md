@@ -70,7 +70,7 @@ Not found: <what you searched and did not find, if anything>
 ## Missing source
 
 - **BC Observatory plugin not loaded or failing:** follow the
-  [MCP failure policy](../../references/mcp-failure-policy.md): 3 attempts, then ask the
+  [MCP failure policy](../../references/mcp-failure-policy.md): about 5 failing requests, then halt with a progress statement and ask the
   user (Retry / Continue without it / Stop). Never dig through base-app source, symbol
   packages or `.alpackages` on disk instead. If the user continues, answer from the
   symbols and label it "base-app body not checked". To install the plugin:

@@ -53,9 +53,9 @@ claude plugin install al-agent-harness@al-agent-harness   # brings bc-observator
 |------|-----|---------|
 | Claude Code | the agent host this repo is built for | <https://claude.com/claude-code> (Copilot: see `docs/PORTING.md`) |
 | VS Code + AL Language extension | editing, F5, symbols | Marketplace: `ms-dynamics-smb.al` |
-| Node.js 20+ | the hook script, `npx` MCP servers | <https://nodejs.org> |
+| Node.js 20+ | `/AL-init` helper, guardrail hooks, `npx` MCP servers | <https://nodejs.org> |
 | `al` CLI (implementation only) | build fallback, AL MCP server; not needed for spec work | `dotnet tool install --global microsoft.dynamics.businesscentral.development.tools --prerelease` |
-| AL Object ID Ninja | object ID reservations | MCP server via `.mcp.json` (npx, nothing to install); VS Code extension `vjeko.vjeko-al-objid` optional |
+| Windows PowerShell 5.1 or `pwsh` | local object index and next free IDs (`Get-ALObjectIndex.ps1`); no subscription, no AL Object ID Ninja | preinstalled on Windows; <https://aka.ms/powershell> otherwise |
 | BCQuality | curated BC/AL knowledge and the `al-code-review` skill | in Claude Code: `/plugin marketplace add microsoft/BCQuality` then `/plugin install bcquality@bcquality` |
 | A BC SaaS sandbox (explicit publish/tests only) | not needed for default spec or code-only work | fill `environmentName` in `.vscode/launch.json` |
 | Git | `/AL-commit` creates local logical commits | Install Git and configure your own repository identity; no push is implied |
@@ -86,7 +86,7 @@ The carrier task used in both demo runs is in `docs/TASK.md`. The full talk flow
 
 ## Make it yours
 
-1. Change the affix in `app/AppSourceCop.json` and the ranges in `app.json` / `.objidconfig`
+1. Change the affix in `app/AppSourceCop.json` and the ranges in `app.json`
    (or point the harness at your own app folders and delete `app/` and `test/`).
 2. Empty `rules/` and write your own rules: one short article plus a `.good.al` and a
    `.bad.al` per rule. The company rules skill and internal DoD pick them up automatically.
@@ -100,24 +100,28 @@ The carrier task used in both demo runs is in `docs/TASK.md`. The full talk flow
 
 The plugin provides five command entry points. Each acts on the active workspace, not
 the repository containing an attached command. Earlier numbered harness specs describe
-historical contracts; [plugin/README.md](plugin/README.md) describes the current budget defaults.
+historical contracts; [plugin/README.md](plugin/README.md) describes the current defaults.
 
 | Command | Does | Does not |
 |---------|------|----------|
-| `/AL-start` | MAIN creates docs/specs, docs/knowledge, docs/generated and thin root instructions for normal-chat plugin routing. | Move AL, create app/test scaffolding or launch an agent. |
-| `/AL-start --layout` | Explicit optional byte-preserving PTE setup after cost consent. | Change AL content or run builds/tests. |
-| `/AL-refactor` | Inspect existing code deeply, list sourced findings, fix verified behavior-preserving inconsistencies in existing files and validate. | Normalize folders, create a feature spec, silently merge different event/trigger semantics or upgrade BC. |
-| `/AL-brainstorm` | MAIN mid-tier brainstorming, one batched question round (+1 if necessary), at-most-80-line numbered spec + README line, then STOP. | Default Opus/subagents, implementation, builds, tests or translation. |
-| `/AL-implement <spec>` | Optional MAIN code-only implementation and one build after estimate/consent; `--full` opts into expensive SDD. | Default tests, publish, mutation, DoD, reviewer or translation; automatic build repair. |
-| `/AL-commit` | Review uncommitted changes for grouping and create short meaningful local commits with explicit staging. | Edit code, perform a broad refactor, include secrets, rewrite history, push or create a PR. |
+| `/AL-init` | Agentifies a new or existing repo: docs folders, project and technical overview, `AGENTS.md` rules, guardrail hooks, git docs check, local object index. | Overwrite user text, move AL, build or commit. |
+| `/AL-brainstorm` | MAIN brainstorming, one batched question round (+1 if necessary), at-most-100-line numbered spec + README line, then STOP. | Default Opus/subagents, implementation, builds, tests or translation. |
+| `/AL-implement <spec>` | Optional MAIN code-only implementation, one build after estimate/consent, then docs and spec log updates; `--full` opts into expensive SDD. | Default tests, publish, mutation, DoD, reviewer or translation; automatic build repair. |
+| `/AL-review [scope]` | Read-only review of the whole codebase or one scope (e.g. `the object IDs`); report in `docs/generated/reviews/`. | Edit AL, build, or run without a report. |
+| `/AL-commit` | Updates the technical docs, then creates short local commits with explicit staging. | Edit code, include secrets, rewrite history, push or create a PR. |
 
-Startup and safe refactor fixes do not require the old multi-stage brainstorm/spec pipeline.
-Brainstorming never continues into implementation automatically. Required host permissions and real
-ambiguities still apply. Missing validation is reported, not converted into success.
+There is deliberately no whole-codebase refactor command. Brainstorming never continues into
+implementation automatically. Missing validation is reported, not converted into success.
+
+### Object IDs without a subscription
+
+`plugin/scripts/Get-ALObjectIndex.ps1` parses every `.al` file and `app.json` into
+`docs/knowledge/object-index.json` (objects, fields, ID usage, free blocks, issues) and returns next free
+IDs (`-NextId`, `-NextMemberId`). IDs are not reserved; duplicate detection catches branch collisions.
 
 ### Focused internal specialists
 
-The feature specialists below are expensive full-mode opt-ins, never default spec/implementation steps:
+The specialists below are expensive full-mode opt-ins, never default steps:
 
 | Agent | Responsibility |
 |-------|----------------|
@@ -125,51 +129,27 @@ The feature specialists below are expensive full-mode opt-ins, never default spe
 | `al-build-fixer` | Full mode only: one compiler fix/rebuild cycle, then human handoff. |
 | `al-reviewer` | Independent read-only review of the final validated delta; never review its own edits. |
 | `al-sdd` | Coordinate tests/stubs, RED, implementation, GREEN, reversible mutation, RED, restore and final GREEN. |
+| `al-commit` | Group reviewed changes into small local commits. |
 
 Only `/AL-implement <spec> --full` starts SDD after cost consent and exact nonproduction
-Sandbox permission. Evidence stays in session, not an inflated spec. Refactoring has no
-automatic fixer or review agent. Setup and commit grouping stay separate.
+Sandbox permission. Evidence stays in session, not an inflated spec.
 
-Plain `/AL-start` leaves code/configuration alone and creates only missing documentation
-folders plus root `AGENTS.md` and `.github/copilot-instructions.md`. Those route ordinary
-feature requests to `bc-workflow` without commands; plugin installation/enablement is
-still required. No local Agent folder or copies of plugin resources are needed.
-See [automatic-use verification](plugin/README.md#automatic-use-without-commands).
-
-Only explicit `AL-start --layout` standardizes consuming AL workspaces to:
+### What `/AL-init` leaves in a repo
 
 ```text
-AGENTS.md            Project map and safety rules (preserve existing policies)
-<name>.code-workspace Explicit app/test folders (reuse an existing workspace)
-.github/             Copilot instructions and empty workflows/
-app/                 Application project
-app/.vscode/         Settings and evidence-backed launch configuration
-app/.alpackages/     Symbol cache (preserve/report ignore configuration)
-app/Features/Setup/  Codeunits, Pages, Tables (only without existing organization)
-app/Translations/    Localization resources
-test/                Test application
-test/Tests/          Test source boundary
-docs/                Maintained documentation
-docs/specs/          Feature contracts (existing legacy specs/ stays in place)
-docs/generated/      ONLY output folder for generated supporting files/reports/exports
-docs/knowledge/      User-provided references (external specs, meeting transcripts, etc.)
-rules/               Company rules (empty unless content already exists)
+AGENTS.md / CLAUDE.md          Harness block: rules every chat follows (preserves your own text)
+.github/copilot-instructions.md Pointer to AGENTS.md for Copilot
+.github/hooks/                 al-guardrails (no literal UI text, no base-app digging), al-docs-check
+.claude/settings.json          Same guardrail for Claude Code (only if the file did not exist)
+.git/hooks/pre-commit          Requires docs/knowledge/technical-overview.md with AL/spec changes
+docs/specs/                    Feature specs (up to 100 lines; Implementation Log grows)
+docs/knowledge/                Your inputs + project-overview.md, technical-overview.md, object-index.json
+docs/generated/                ONLY output folder for generated files, reports and exports
 ```
 
-Existing projects using `specs/` retain it; setup does not migrate or create a parallel root.
-If both roots exist, main selects one once without merging. Setup
-must update affected tasks, CI, launch settings, dependencies and documentation links.
-Project-owned instructions and Definition of Done remain authoritative.
-Missing manifests, affixes, dependencies and Sandbox settings are not invented; their
-absence is reported. Setup creates only safe instruction/workspace/settings files, not
-DoD/spec templates, CI jobs or hooks. It does not build, test, publish or commit.
-Creating an empty `test/Tests/` directory does not invent a test app or prove tests ran.
-
-New specification names are numbered: `1-project-create.md`, `2-carrier-validation.md`,
-`3-next-feature.md`. Allocate the next number above the highest existing numeric prefix;
-do not reuse holes or sort `10` before `2`. Templates and indexes are excluded.
-Every spec MUST include status (`draft`, `approved`, `implemented`) and a last-updated
-date (`YYYY-MM-DD`). Approval changes status/date then STOP; implementation is separate.
+New specification names are numbered: `1-project-create.md`, `2-carrier-validation.md`. Allocate the
+next number above the highest existing prefix. Every spec MUST include `status` (`draft`, `approved`,
+`implemented`) and a last-updated `date` (`YYYY-MM-DD`).
 
 ### Use with Copilot
 
@@ -182,13 +162,10 @@ copilot plugin list
 
 For VS Code, use **Chat: Install Plugin from Source** and select the local `plugin`
 directory. Enable it for the intended harness, then start a fresh chat and use slash
-autocomplete to find **AL-start**, **AL-refactor**, **AL-brainstorm**, **AL-implement** or **AL-commit**. Use the namespace shown by
-your host if it does not expose a bare command. Do not use `!AL-refactor`: `!` can
-mean shell execution rather than a plugin command.
+autocomplete to find **AL-init**, **AL-brainstorm**, **AL-implement**, **AL-review** or
+**AL-commit**. Use the namespace shown by your host if it does not expose a bare command.
+Do not use `!AL-review`: `!` can mean shell execution rather than a plugin command.
 
-Select a mid-tier main-chat model; a cheap tier suits mechanical edits. `--deep` permits
-at most one optional Opus consultation after estimate/consent. No model availability
-blocker: use what is selected. Spec work normally needs no MCP servers. Refresh the
-installed plugin and start a fresh chat to remove stale instructions/tool catalogs.
-See [plugin/README.md](plugin/README.md) for workflow details and smoke tests, and
-[docs/PORTING.md](docs/PORTING.md) for compatibility.
+Use the latest enabled Claude model (Sonnet-class for design and code, Haiku for mechanical edits; GPT is
+fine for docs). Opus only after you grant it. Spec work normally needs no MCP servers.
+See [plugin/README.md](plugin/README.md) for details and [docs/PORTING.md](docs/PORTING.md) for compatibility.

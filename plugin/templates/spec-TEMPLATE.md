@@ -5,6 +5,8 @@ date: <YYYY-MM-DD>
 
 # <Feature Name>
 
+<!-- Planning part: at most 100 lines. The Implementation Log below may grow without limit. -->
+
 ## Goal
 
 <Two or three sentences: who needs this and the intended outcome.>
@@ -25,7 +27,7 @@ date: <YYYY-MM-DD>
 
 | Object Name | ID | Change |
 |-------------|----|--------|
-| <type and name> | assign at implementation | <one line> |
+| <type and name> | from the object index at implementation | <one line> |
 
 ## Acceptance Checks
 
@@ -38,3 +40,14 @@ date: <YYYY-MM-DD>
 ## Open Questions
 
 None.
+
+## Implementation Log
+
+<!-- Added after implementation; one dated entry per change or review. Newest last. Git has the code history;
+     this records WHY. -->
+
+### <YYYY-MM-DD> implemented
+
+- Changed: <objects and behavior>
+- Why: <reason and trade-offs>
+- Gained / lost: <features gained, features dropped or reduced>

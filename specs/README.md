@@ -6,7 +6,7 @@ in [plugin/README.md](../plugin/README.md); older indexed harness specs are hist
 ## Default Flow
 
 MAIN brainstorms, asks one batch of questions (at most two rounds), agrees direction and
-writes an at-most-80-line spec. After approval, STOP for developers. Mandatory frontmatter:
+writes an at-most-100-line spec. After approval, STOP for developers. Mandatory frontmatter:
 `status: draft | approved | implemented` and `date: YYYY-MM-DD` (last updated).
 No approval hashes, reserved-ID table or automatic implementation is required. Optional
 `/AL-implement <spec>` writes code with one build; `--full` is expensive opt-in only.
@@ -18,8 +18,10 @@ No approval hashes, reserved-ID table or automatic implementation is required. O
 - Next number is one above the highest positive numeric prefix, not the number of files.
   Order the index numerically, never renumber completed specs or reuse a deleted number.
   Legacy unnumbered files stay readable; new feature specs are numbered.
-- Objects are named by type and name. New IDs say `assign at implementation`; Ninja
-  reservations happen only when writing AL, with evidence kept in session.
+- Objects are named by type and name. New IDs say `from the object index at implementation`; they come from
+  the local `Get-ALObjectIndex.ps1` script only when writing AL.
+- After implementation the spec may grow without limit through its Implementation Log: dated entries with what
+  changed, why (git has the code), features gained or lost, and later re-reviews.
 - Mention meaningful dependencies inline in Decisions or Business Rules, no metadata ledger.
 - At most 10 acceptance checks, verifiable by hand. Tests are optional, never one per check.
 - Material open questions must be resolved before implementation.
@@ -29,7 +31,7 @@ No approval hashes, reserved-ID table or automatic implementation is required. O
 - Substantive changes to approved behavior reset status to `draft`. Dates are last-updated
   dates, not inferred original creation or historical approval dates.
 - Write a new feature spec through `/AL-brainstorm`. The workflow adds it to the index.
-  Setup, code-only refactoring and commit grouping do not require feature specs.
+  Initialization, review and commit grouping do not require feature specs.
 - `/AL-brainstorm` uses the lean template, with no Sandbox workflow, build or translation.
 
 ## Index

@@ -1,123 +1,38 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
-const read = (file) => fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+const root = fileURLToPath(new URL('../', import.meta.url));
+const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8').replace(/\s+/g, ' ');
+const readRepo = (relative) => fs.readFileSync(path.join(root, '..', relative), 'utf8').replace(/\s+/g, ' ');
 
-test('brainstorm defaults to main-chat spec and stops', () => {
-  const command = read('commands/AL-brainstorm.md');
-  assert.match(command, /bc-workflow/);
-  assert.match(command, /no Opus, no subagents/);
-  assert.match(command, /at-most-80-line/);
-  assert.match(command, /STOP/);
-  assert.doesNotMatch(command, /al-spec|al-sdd|opus-model|opus-selection/);
-  assert.match(command, /at most ONE/);
-  assert.match(command, /Never block on model availability/);
-});
-
-test('workflow budgets research, questions, consent and main-chat spec writing', () => {
-  const skill = read('skills/bc-workflow/SKILL.md');
-  for (const phrase of [/10 targeted/, /15 total tool calls/, /3-6 business questions/,
-    /At most 2 question rounds/, /MAIN writes the spec/, /ask "write spec\?"/,
-    /Never reread/, /cosmetic changes/, /150 lines of code/, /ask once/,
-    /convert into `docs\/generated\/knowledge\//, /never re-extract/, /Spec ready for developers/]) {
-    assert.match(skill, phrase);
+test('brainstorm stops after a spec of at most 100 lines; implementation is explicit', () => {
+  for (const text of [read('commands/AL-brainstorm.md'), read('skills/bc-workflow/SKILL.md'), readRepo('specs/README.md')]) {
+    assert.match(text, /100[- ]line/);
   }
-  assert.doesNotMatch(skill, /createNumberedSpec|opus-selection|specialist-handoff/);
+  assert.match(read('commands/AL-brainstorm.md'), /STOP/);
+  assert.match(read('commands/AL-implement.md'), /ONE build|one build/);
 });
 
-test('implementation has a single-build default and explicit expensive full mode', () => {
-  const command = read('commands/AL-implement.md');
-  assert.match(command, /ONE build after estimate\/consent/);
-  assert.match(command, /No tests, test app, mutation, DoD, subagents, publish or translation/);
-  assert.match(command, /--full.*explicitly opts into expensive/);
-  const skill = read('skills/bc-workflow/SKILL.md');
-  assert.match(skill, /no automatic fix\/rebuild loop/);
-  assert.match(skill, /including `--full`/);
+test('review writes only a report under docs/generated and does not edit code', () => {
+  const text = read('commands/AL-review.md');
+  assert.match(text, /docs\/generated\/reviews/);
+  assert.match(text, /read-only|does not edit|never edit/i);
 });
 
-test('template has exactly seven lean sections and deferred IDs', () => {
-  const template = read('templates/spec-TEMPLATE.md');
-  assert.equal(template.trimEnd(), read('../specs/TEMPLATE.md').trimEnd());
-  assert.ok(template.trimEnd().split(/\r?\n/).length <= 80);
-  assert.deepEqual([...template.matchAll(/^## (.+)$/gm)].map((match) => match[1]), [
-    'Goal', 'Decisions', 'Business Rules', 'Objects To Change / Create',
-    'Acceptance Checks', 'Out Of Scope / Known Risks', 'Open Questions',
-  ]);
-  assert.match(template, /assign at implementation/);
-  assert.match(template, /^---\r?\nstatus: draft\r?\ndate: <YYYY-MM-DD>\r?\n---/);
-  assert.doesNotMatch(template, /SHA256|Execution contract|Approval|Reserved IDs|## Tests/);
+test('init deploys hooks into the repo and keeps a human in the loop for existing config', () => {
+  const text = read('commands/AL-init.md');
+  assert.match(text, /al-init\.mjs/);
+  assert.match(text, /\.github\/hooks/);
+  assert.match(text, /technical-overview/);
 });
 
-test('spec metadata has an explicit lightweight lifecycle', () => {
-  const workflow = read('skills/bc-workflow/SKILL.md');
-  assert.match(workflow, /`draft` -> `approved` only on explicit developer approval/);
-  assert.match(workflow, /`implemented` only after a developer confirms completion/);
-  assert.match(workflow, /Refresh `date` on spec edits\/status changes/);
-  assert.match(workflow, /reset status to `draft`/);
-  const specs = new URL('../../specs/', import.meta.url);
-  for (const name of fs.readdirSync(specs).filter((file) => /^\d+-.+\.md$/.test(file))) {
-    const metadata = read(`../specs/${name}`).split(/^---\s*$/m)[1];
-    assert.ok(metadata, name);
-    assert.match(metadata, /^status: (draft|approved|implemented)\r?$/m, name);
-    const date = metadata.match(/^date: (\d{4}-\d{2}-\d{2})\r?$/m)?.[1];
-    assert.ok(date && Number.isFinite(Date.parse(date)), name);
-    assert.equal(new Date(date).toISOString().slice(0, 10), date, name);
-  }
-});
-
-test('build defaults to one attempt and fixer has one full-mode cycle', () => {
-  const build = read('skills/al-build-validation/SKILL.md');
-  assert.match(build, /ONE build of the touched production app/);
-  assert.match(build, /no automatic repair, second build, tests, publish or symbol downloads/);
-  const fixer = read('agents/al-build-fixer.md');
-  assert.match(fixer, /FULL MODE ONLY after explicit cost consent/);
-  assert.match(fixer, /at most one bounded/);
-  assert.doesNotMatch(fixer, /two bounded/);
-  const adapter = read('copilot/agents/al-build-fixer.agent.md');
-  assert.match(adapter, /at most one safe fix\/rebuild cycle/);
-  assert.doesNotMatch(adapter, /two safe cycles/);
-});
-
-test('startup and workspace guidance do not reintroduce costly defaults', () => {
-  const startup = read('hooks/session-start.mjs');
-  assert.match(startup, /no subagents/);
-  assert.match(startup, /ONE build after estimate\/consent/);
-  assert.match(startup, /never automatic even in --full/);
-  assert.doesNotMatch(startup, /REAL Opus agent|al-spec writes|two bounded fix cycles/);
-  const setup = read('scripts/start-layout.mjs');
-  assert.match(setup, /at-most-80-line spec, then STOP/);
-  assert.match(setup, /ONE build after estimate\/consent/);
-  const docs = read('README.md');
-  for (const phrase of [/Budget Workspace Setup/, /spec work needs NONE/,
-    /Pylance\/Python/, /TypeScript and GitHub PR/, /NAB translation instructions/,
-    /fresh chat/, /cannot be removed by this/]) assert.match(docs, phrase);
-  const index = read('../specs/README.md');
-  assert.match(index, /After approval, STOP for developers/);
-  assert.match(index, /Tests are optional, never one per check/);
-  assert.doesNotMatch(index, /Acceptance criteria and tests map one-to-one/);
-});
-
-test('skill discovery descriptions are short single lines', () => {
-  const skills = new URL('../skills/', import.meta.url);
-  for (const entry of fs.readdirSync(skills, { withFileTypes: true })) {
-    if (!entry.isDirectory()) continue;
-    const text = read(`skills/${entry.name}/SKILL.md`);
-    const description = text.match(/^description: "(.+)"\r?$/m)?.[1];
-    assert.ok(description && description.length <= 125, entry.name);
-  }
-});
-
-test('ordinary requests route through instructions and startup defaults to docs only', () => {
-  const command = read('commands/AL-start.md');
-  assert.match(command, /Default: no subagents/);
-  assert.match(command, /`planDocsStart\(root\)`/);
-  assert.match(command, /Only `--layout` invokes ONE actual `al-start`/);
-  assert.match(command, /docs\/generated\//);
-  const workflow = read('skills/bc-workflow/SKILL.md');
-  assert.match(workflow, /no slash command is required/);
-  assert.match(workflow, /ALL generated supporting files/);
-  const exports = read('skills/chat-export/SKILL.md');
-  assert.match(exports, /Save only under `docs\/generated\//);
-  assert.doesNotMatch(exports, /outside the repo/);
+test('model policy: Claude tiers, GPT for docs, latest enabled version, Opus only on request', () => {
+  const text = read('skills/bc-workflow/SKILL.md') + read('README.md');
+  assert.match(text, /Opus/);
+  assert.match(text, /GPT/);
+  assert.match(text, /Haiku/);
+  assert.match(text, /latest/i);
 });

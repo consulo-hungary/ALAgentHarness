@@ -15,7 +15,7 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 ## Look it up, never assume
 
 - **Affix:** `mandatoryAffixes` in `app/AppSourceCop.json`. Every new object name carries it.
-- **Object IDs:** reserved with AL Object ID Ninja, never picked. Do not read `idRanges`.
+- **Object IDs:** from the local object index (`plugin/scripts/Get-ALObjectIndex.ps1`), never picked or guessed. No Ninja.
 - **BC version:** `application` and `runtime` in `app/app.json`.
 
 ## How we write AL
@@ -58,7 +58,7 @@ without slash commands. Other skills load only when relevant; specialists never 
 Use a selected mid-tier model in MAIN; cheap tier for mechanical tasks. Opus is opt-in
 `--deep` only, at most one consultation, never an availability blocker. Follow `bc-workflow`.
 MAIN brainstorms with about 10 targeted reads/greps and 15 total tool calls, one batch of
-3-6 questions with defaults (at most two rounds), then writes an at-most-80-line spec and
+3-6 questions with defaults (at most two rounds), then writes an at-most-100-line spec and
 one README link line after agreed direction. STOP for developers after spec approval.
 Every spec MUST have `status: draft | approved | implemented` and `date: YYYY-MM-DD`
 (last updated). Developer approval sets approved; confirmed completion sets implemented.
@@ -69,9 +69,8 @@ Before subagents, build/publish or >150-line code steps, estimate cost and ask o
 
 | Task | Command |
 |------|-----|
-| initialize automatic workflow guidance | `/AL-start` - MAIN docs/specs, docs/knowledge, docs/generated and thin root instructions only |
-| explicitly normalize a consuming AL workspace | `/AL-start --layout` - optional byte-preserving PTE setup; no AL content edits |
-| review and improve existing AL code | `/AL-refactor` - findings and verified behavior-preserving fixes; no layout setup or feature pipeline |
+| initialize or agentify a repo | `/AL-init` - docs folders, project/technical overview, AGENTS.md block, guardrail hooks, git docs check |
+| review the codebase or one part | `/AL-review [scope]` - read-only; report in `docs/generated/reviews/` |
 | design a new feature | `/AL-brainstorm` - MAIN questions + lean numbered spec, then STOP |
 | explicitly implement a spec | `/AL-implement <spec>` - MAIN code only, one build; `--full` is expensive opt-in |
 | group and commit existing changes | `/AL-commit` - small grouping agent, short local commits; no code edits, push or PR |

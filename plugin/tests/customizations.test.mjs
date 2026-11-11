@@ -1,383 +1,91 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { resolveLayout } from '../skills/bc-workflow/scripts/resolve-layout.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const repo = path.join(root, '..');
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
+const readRepo = (relative) => fs.readFileSync(path.join(repo, relative), 'utf8');
 const json = (relative) => JSON.parse(read(relative));
-const specialists = ['al-coder', 'al-build-fixer', 'al-reviewer'];
-const names = ['al-start', 'al-refactor', 'al-commit', 'al-sdd', ...specialists];
-function files(directory) {
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(directory, entry.name);
-    return entry.isDirectory() ? files(full) : [full];
-  });
-}
-function frontmatter(text) {
-  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  assert.ok(match, 'Missing frontmatter');
-  const fields = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const field = line.match(/^([a-z][a-z-]*): (.+)$/);
-    assert.ok(field, `Unsupported frontmatter line: ${line}`);
-    assert.ok(!line.includes('\t'));
-    const value = field[2];
-    if (value.startsWith('"') || value.startsWith('[')) assert.doesNotThrow(() => JSON.parse(value));
-    fields[field[1]] = value.replace(/^["']|["']$/g, '');
-  }
-  assert.ok(fields.description?.length > 20);
-  return fields;
-}
-function fixture(callback) {
-  const directory = path.join(root, 'tests', `fixture-${process.pid}-${randomUUID()}`);
-  fs.mkdirSync(directory);
-  const put = (relative, content = '') => {
-    const file = path.join(directory, relative);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, content);
-  };
-  try { callback(directory, put); } finally { fs.rmSync(directory, { recursive: true, force: true }); }
-}
-const manifest = JSON.stringify({ name: 'Fixture', application: '28.0.0.0', runtime: '17.0',
-  dependencies: [], secret: 'must-not-leak', id: 'must-not-leak' });
+const flat = (text) => text.replace(/\s+/g, ' ');
+const walk = (directory) => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+  const full = path.join(directory, entry.name);
+  return entry.isDirectory() ? walk(full) : [full];
+});
 
-test('both manifests discover five command files and coherent version 2.2.0', () => {
+test('manifests agree on version 3.0.0 and the command set; no hooks or Ninja', () => {
   const copilot = json('plugin.json');
   const claude = json('.claude-plugin/plugin.json');
-  assert.equal(copilot.$schema, undefined);
-  assert.equal(copilot.version, '2.2.0');
+  const marketplace = JSON.parse(readRepo('.claude-plugin/marketplace.json'));
+  assert.equal(copilot.version, '3.0.0');
   assert.equal(claude.version, copilot.version);
-  assert.deepEqual(claude.dependencies, ['bc-observatory@bc-observatory']);
-  const marketplace = JSON.parse(fs.readFileSync(path.join(root, '..', '.claude-plugin', 'marketplace.json'), 'utf8'));
   assert.equal(marketplace.plugins.find((entry) => entry.name === copilot.name).version, copilot.version);
-  for (const key of ['agents', 'skills', 'commands', 'mcpServers', 'hooks']) {
-    assert.ok(fs.existsSync(path.join(root, copilot[key])));
-  }
-  assert.equal(copilot.commands, 'commands/');
-  // Claude's convention and Copilot's explicit registration resolve the SAME directory.
-  assert.deepEqual(fs.readdirSync(path.join(root, copilot.commands)).sort(),
-    ['AL-brainstorm.md', 'AL-commit.md', 'AL-implement.md', 'AL-refactor.md', 'AL-start.md']);
-  for (const file of fs.readdirSync(path.join(root, copilot.commands))) {
-    assert.ok(frontmatter(read(`commands/${file}`)).description);
-    assert.match(read(`commands/${file}`), /!AL-.*shell execution.*NOT/s);
-  }
+  assert.equal(copilot.hooks, undefined);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'commands')).sort(),
+    ['AL-brainstorm.md', 'AL-commit.md', 'AL-implement.md', 'AL-init.md', 'AL-review.md']);
+  assert.doesNotMatch(read('.mcp.json'), /ninja/i);
 });
 
-test('all canonical agents have thin adapters without nonportable model frontmatter', () => {
-  assert.deepEqual(fs.readdirSync(path.join(root, 'agents')).sort(), names.map((name) => `${name}.md`).sort());
-  assert.deepEqual(fs.readdirSync(path.join(root, 'copilot', 'agents')).sort(),
-    names.map((name) => `${name}.agent.md`).sort());
-  for (const name of names) {
-    const text = read(`copilot/agents/${name}.agent.md`);
-    const meta = frontmatter(text);
-    const canonical = frontmatter(read(`agents/${name}.md`));
-    assert.equal(meta.name, name);
-    assert.equal(canonical.name, name);
-    assert.equal(meta['user-invocable'], 'false');
-    assert.ok(text.includes(`../../agents/${name}.md`));
-    assert.ok(text.length < 850, 'Adapter duplicates workflow');
-    assert.equal(meta.model, undefined);
-    assert.equal(canonical.model, undefined);
-  }
-});
-
-test('obsolete Opus, drafter and spec-lock resources are absent', () => {
-  for (const relative of ['references/opus-selection.md', 'scripts/opus-model.mjs',
-    'scripts/numbered-specs.mjs', 'agents/al-spec.md', 'agents/al-brainstorm.md',
-    'skills/feature-design', 'skills/al-project-layout', 'references/project-knowledge.md',
-    'references/specialist-handoff.md']) {
+test('removed resources stay removed', () => {
+  for (const relative of ['commands/AL-start.md', 'commands/AL-refactor.md', 'agents/al-start.md',
+    'agents/al-refactor.md', 'scripts/start-layout.mjs', 'skills/al-object-id-assignment',
+    'skills/existing-code-review', 'hooks', 'copilot/hooks.json', 'copilot/session-start.mjs']) {
     assert.ok(!fs.existsSync(path.join(root, relative)), relative);
   }
 });
 
-test('all reusable skills are internal, obsolete public pipeline absent, relative markdown links valid', () => {
-  const customizationFiles = ['agents', 'commands', 'skills', 'copilot', 'templates', 'references']
-    .flatMap((directory) => files(path.join(root, directory)));
-  customizationFiles.push(path.join(root, 'README.md'));
-  for (const file of customizationFiles.filter((file) => file.endsWith('.md'))) {
-    const text = fs.readFileSync(file, 'utf8');
-    assert.doesNotMatch(text, /\bal-(?:workflow|spec-drafter|test-runner|lookup)\b/);
-    assert.doesNotMatch(text, /(?:`|\s)\/(?:spec|sdd|done|pr)(?:\s|`|<|$)/);
-    for (const match of text.matchAll(/\]\((\.\.?\/[^)\s]+)\)/g)) {
-      const target = path.resolve(path.dirname(file), match[1].split('#')[0]);
-      assert.ok(!path.relative(root, target).startsWith('..'), `Link escapes plugin: ${file}`);
-      assert.ok(fs.existsSync(target), `Broken reference ${match[1]} in ${file}`);
-    }
-    if (path.basename(file) === 'SKILL.md') {
-      const meta = frontmatter(text);
-      assert.equal(meta.name, path.basename(path.dirname(file)));
-      assert.equal(meta['user-invocable'], 'false');
-      const commandNames = fs.readdirSync(path.join(root, 'commands'))
-        .map((name) => path.basename(name, '.md').toLowerCase());
-      assert.ok(!commandNames.includes(meta.name.toLowerCase()), `Command/skill collision: ${meta.name}`);
-    }
+test('skill descriptions are short, double-quoted and the new skills exist', () => {
+  for (const name of ['al-object-index', 'al-coding-principles', 'project-docs', 'review-report']) {
+    assert.ok(fs.existsSync(path.join(root, 'skills', name, 'SKILL.md')), name);
+  }
+  for (const file of walk(path.join(root, 'skills')).filter((entry) => entry.endsWith('SKILL.md'))) {
+    const line = fs.readFileSync(file, 'utf8').split(/\r?\n/).find((entry) => entry.startsWith('description:'));
+    assert.match(line, /^description: ".+"$/, file);
+    assert.ok(line.length - 'description: ""'.length <= 125, `${file}: description over 125 characters`);
   }
 });
 
-test('setup, refactor and commit commands retain independent scopes', () => {
-  for (const name of ['start', 'refactor', 'commit']) {
-    assert.match(read(`commands/AL-${name}.md`), new RegExp(`actual \`al-${name}\``));
-    assert.match(read(`commands/AL-${name}.md`), /active workspace|ACTIVE WORKSPACE/i);
-  }
-  const start = read('agents/al-start.md');
-  assert.match(start, /byte|bytes/);
-  assert.match(start, /PageExtensions.*TableExtension/s);
-  assert.match(start, /must not remain as[\s\S]*orphan root source folder/);
-  assert.match(start, /Never copy production objects into both projects/);
-  assert.match(start, /If these known root-level legacy category folders are\s+empty, remove/);
-  assert.match(start, /never leave AL source outside either project/);
-  assert.match(start, /No nested agents/);
-  assert.match(start, /Test may remain\s+empty/);
-  assert.match(start, /hook: inherited/);
-  assert.match(start, /never migrate|Hard-stop/i);
-  for (const item of ['AGENTS.md', '.code-workspace', 'copilot-instructions.md',
-    'workflows/', 'Features/Setup/', 'Translations/', 'Tests/', 'rules/']) {
-    assert.ok(start.includes(item), `Missing PTE setup surface: ${item}`);
-  }
-  assert.match(start, /Leave unknown files absent/);
-  assert.match(start, /Legacy `specs\/` stays intact/);
-  assert.match(start, /no build, tests, symbol downloads/);
-  assert.match(start, /No extra workflow artifacts, hooks or CI implementation|Do not seed templates/);
-  const refactor = read('agents/al-refactor.md');
-  assert.match(refactor, /Invocation permits safe fixes/);
-  assert.match(refactor, /EXISTING files only/);
-  assert.match(refactor, /No layout normalization/);
-  assert.match(refactor, /ONE post-change owning-app build/);
-  assert.match(refactor, /RunTrigger/);
-  const commit = read('agents/al-commit.md');
-  assert.match(commit, /FIRST inspect/);
-  assert.match(commit, /preserv|Preserv/);
-  assert.match(commit, /AUTHORIZES/);
-  const sdd = read('agents/al-sdd.md');
-  assert.match(sdd, /assertion failure/);
-  assert.match(sdd, /Mutation -> RED/);
-  assert.match(sdd, /Revert -> GREEN/);
-  assert.match(sdd, /FULL MODE ONLY/);
-  assert.match(sdd, /No translations/);
-});
-
-test('SDD owns a genuine sequential assertion RED to specialist logic to final GREEN review loop', () => {
-  const sdd = read('agents/al-sdd.md');
-  const phases = ['**Spec -> tests/stubs:**', '**RED:**', '**Logic -> GREEN:**',
-    '**Mutation -> RED:**', '**Revert -> GREEN:**', 'After final GREEN AND current DoD',
-    '[al-reviewer]'];
-  const indices = phases.map((phase) => sdd.indexOf(phase));
-  assert.ok(indices.every((index) => index >= 0));
-  assert.deepEqual(indices, [...indices].sort((a, b) => a - b));
-  assert.match(sdd, /ONLY after proven assertion RED, launch actual\s+\[al-coder\]/);
-  assert.match(sdd, /SDD owns tests, stubs and initial Ninja\s+reservations/);
-  assert.match(sdd, /Tests\/stubs are written only before assertion RED/);
-  assert.match(sdd, /Build\/runner\/auth\/environment failure is NEVER RED/);
-  assert.match(sdd, /No concurrent writers/);
-  assert.match(sdd, /SDD builds\/publishes\/runs identical scope/);
-  assert.match(sdd, /Always restore mutations on\s+failure/);
-  assert.match(sdd, /never spec approval alone/);
-});
-
-test('coder preserves assertions and has no independent feature or testing pipeline', () => {
-  const coder = read('agents/al-coder.md');
-  assert.match(coder, /No valid assertion RED -> BLOCKED/);
-  assert.match(coder, /Build\/runner\/auth failures do not authorize logic/);
-  assert.match(coder, /allowed business-source files only/);
-  assert.match(coder, /Ninja.*BEFORE writing/s);
-  assert.match(coder, /User-facing Error\/Message\/Confirm text uses Labels/);
-  assert.match(coder, /company rules/);
-  assert.match(coder, /BCQuality/);
-  assert.match(coder, /Do not edit tests\/stubs' contract, weaken assertions, change test scope/);
-  assert.match(coder, /build\/publish\/run tests, review, commit or launch nested agents/);
-  assert.match(coder, /retained\s+SDD coordinator/);
-});
-
-test('compilation fixer is conditional, bounded and never supplies test evidence', () => {
-  const fixer = read('agents/al-build-fixer.md');
-  for (const relative of ['agents/al-sdd.md', 'skills/al-build-validation/SKILL.md']) {
-    const text = read(relative);
-    assert.match(text, /\[al-build-fixer\]\(/);
-    assert.match(text, /compilation failure|compilation repair|compile failure|actual compiler\s+errors/);
-  }
-  assert.match(fixer, /Require actual compiler diagnostics/);
-  assert.match(fixer, /at most one bounded/);
-  assert.match(fixer, /behavior-preserving/);
-  assert.match(fixer, /No new objects\/fields\/IDs/);
-  assert.match(fixer, /No publish, tests, mutation, independent review or nested agents/);
-  assert.match(fixer, /Tests: not run/);
-  assert.match(fixer, /GREEN only after a real zero-error build/);
-});
-
-test('independent reviewer is read-only with evidence-first findings and restrictive adapters', () => {
-  const reviewer = read('agents/al-reviewer.md');
-  const adapter = frontmatter(read('copilot/agents/al-reviewer.agent.md'));
-  const tools = JSON.parse(adapter.tools);
-  assert.ok(tools.includes('read') && tools.includes('search'));
-  assert.ok(tools.some((tool) => tool.startsWith('bc-observatory/')));
-  assert.ok(tools.some((tool) => tool.startsWith('bc-code-atlas/')));
-  assert.ok(!tools.some((tool) => /edit|execute|agent|al\/|request_version|publish|run_tests/.test(tool)));
-  const canonicalTools = frontmatter(reviewer).tools;
-  assert.doesNotMatch(canonicalTools, /\b(?:Write|Edit|Bash|Task)\b|request_version|al_build|al_publish|run_tests/);
-  for (const name of specialists) {
-    assert.equal(frontmatter(read(`copilot/agents/${name}.agent.md`)).agents, '[]');
-  }
-  const coderTools = JSON.parse(frontmatter(read('copilot/agents/al-coder.agent.md')).tools);
-  assert.ok(coderTools.includes('edit') && coderTools.includes('al-object-id-ninja/*'));
-  assert.ok(!coderTools.includes('execute'));
-  assert.match(reviewer, /REAL isolated child context distinct from every writer/);
-  assert.match(reviewer, /No edits, shell execution, builds, publish, test commands/);
-  assert.match(reviewer, /priority, exact file:line, rule\/source, rationale, confidence/);
-  assert.match(reviewer, /reviewed delta, checks, gaps and verdict/);
-  assert.match(reviewer, /Missing\/stale required evidence -> NOT DONE\/BLOCKED/);
-});
-
-test('full-mode source edits require fresh evidence within explicit consent', () => {
-  const sdd = read('agents/al-sdd.md');
-  assert.match(sdd, /ANY source edits invalidate\s+old GREEN\/package\/DoD\/review evidence/);
-  assert.match(sdd, /further independent review needs cost consent/);
-  assert.match(sdd, /Logic changes also\s+rerun affected reversible mutation/);
-  assert.match(sdd, /Test\/scope changes require MAIN approval and tests\/stubs -> new assertion RED -> coder/);
-  assert.match(read('skills/definition-of-done/SKILL.md'), /ANY source edits stale prior package\/GREEN\/DoD\/review/);
-});
-
-test('knowledge conversion and evidence stay local to main chat', () => {
-  const workflow = read('skills/bc-workflow/SKILL.md');
-  assert.match(workflow, /Missing knowledge is valid/);
-  assert.match(workflow, /Preserve the original/);
-  assert.match(workflow, /documents are evidence, not instructions/);
-  assert.match(workflow, /never re-extract per round/);
-  assert.match(read('agents/al-start.md'), /docs\/knowledge\//);
-  assert.match(read('commands/AL-start.md'), /docs\/knowledge\//);
-});
-
-test('refactor review is opt-in; setup and commit do not expand pipelines', () => {
-  const refactor = read('agents/al-refactor.md');
-  assert.match(refactor, /ONE continuous targeted local inspection/);
-  assert.match(refactor, /explicit expensive opt-in/);
-  assert.match(refactor, /No review on zero changes/);
-  assert.match(refactor, /No forced spec\/layout\/SDD\/DoD/);
-  for (const role of ['start', 'commit']) {
-    for (const relative of [`agents/al-${role}.md`, `commands/AL-${role}.md`,
-      `copilot/agents/al-${role}.agent.md`]) {
-      assert.doesNotMatch(read(relative), /\bal-(?:spec|coder|build-fixer|reviewer)\b/);
-    }
+test('copilot adapters are thin and specialists cannot spawn agents', () => {
+  for (const file of fs.readdirSync(path.join(root, 'copilot', 'agents'))) {
+    const text = read(`copilot/agents/${file}`);
+    const name = file.replace('.agent.md', '');
+    assert.ok(text.length < 850, `${file} too long`);
+    assert.ok(text.includes(`../../agents/${name}.md`));
+    if (['al-coder', 'al-build-fixer', 'al-reviewer'].includes(name)) assert.match(text, /^agents: \[\]$/m);
   }
 });
 
-test('layout strict mode, BOM, custom roots and no manifest/source secrets in output', () => fixture((directory, put) => {
-  put(path.join('extension', 'app.json'), `\uFEFF${manifest}`);
-  put(path.join('test', 'app.json'), manifest);
-  const layout = resolveLayout(directory, { appRoot: 'extension' });
-  assert.equal(layout.manifests.app.runtime, '17.0');
-  assert.equal(layout.knowledgeRoot, path.join(directory, 'docs', 'knowledge'));
-  assert.ok(!fs.existsSync(layout.knowledgeRoot), 'Read-only resolution must not create knowledge');
-  assert.doesNotMatch(JSON.stringify(layout), /must-not-leak|secret/);
-  assert.throws(() => resolveLayout(directory), /Missing AL manifest/);
-  const result = spawnSync(process.execPath, [path.join(root, 'skills', 'bc-workflow', 'scripts', 'resolve-layout.mjs'),
-    '--project-root', directory, '--app-root', 'extension'], { encoding: 'utf8' });
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), layout);
-}));
-
-test('layout baseline is read-only, accepts root app and missing tests without target normalization', () => fixture((directory, put) => {
-  put('app.json', manifest);
-  const before = fs.readdirSync(directory);
-  const layout = resolveLayout(directory, { refactorBaseline: true });
-  assert.equal(layout.appRoot, directory);
-  assert.equal(layout.manifests.test, null);
-  assert.equal(layout.targetLayout, undefined);
-  assert.deepEqual(fs.readdirSync(directory), before);
-  assert.throws(() => resolveLayout(directory), /Missing AL manifest/);
-}));
-
-test('layout both roots block, explicit selection works, missing/malformed errors are normal CLI blockers', () => fixture((directory, put) => {
-  put(path.join('app', 'app.json'), manifest);
-  put(path.join('test', 'app.json'), manifest);
-  put(path.join('specs', 'README.md'));
-  put(path.join('docs', 'specs', 'README.md'));
-  assert.throws(() => resolveLayout(directory), /BLOCKED: both/);
-  assert.equal(resolveLayout(directory, { specRoot: 'specs' }).specRoot, path.join(directory, 'specs'));
-  assert.throws(() => resolveLayout('relative'), /absolute/);
-  assert.throws(() => resolveLayout(directory, { specRoot: '..' }), /inside/);
-  assert.throws(() => resolveLayout(directory, { specRoot: directory }), /project-relative/);
-  put(path.join('app', 'app.json'), '{ malformed');
-  const result = spawnSync(process.execPath, [path.join(root, 'skills', 'bc-workflow', 'scripts', 'resolve-layout.mjs'),
-    '--project-root', directory, '--spec-root', 'specs'], { encoding: 'utf8' });
-  assert.equal(result.status, 1);
-  assert.equal(result.stdout, '');
-  assert.match(result.stderr, /JSON|property|position/i);
-}));
-
-test('layout resolver blocks escaped symlink ancestor', () => fixture((directory, put) => {
-  put(path.join('app', 'app.json'), manifest);
-  put(path.join('test', 'app.json'), manifest);
-  fixture((outside) => {
-    fs.symlinkSync(outside, path.join(directory, 'linked'), process.platform === 'win32' ? 'junction' : 'dir');
-    assert.throws(() => resolveLayout(directory, { specRoot: path.join('linked', 'specs') }), /symlink escapes/);
-  });
-}));
-
-function hook(relative, event) {
-  return spawnSync(process.execPath, [path.join(root, relative)], {
-    input: typeof event === 'string' ? event : JSON.stringify(event), encoding: 'utf8',
-    env: { ...process.env, PLUGIN_ROOT: root, CLAUDE_PLUGIN_ROOT: root },
-  });
-}
-test('Copilot hook registration and session protocol preserve inherited guardrails and new scopes', () => {
-  const config = json('copilot/hooks.json');
-  assert.equal(config.version, 1);
-  assert.deepEqual(Object.keys(config.hooks).sort(), ['preToolUse', 'sessionStart']);
-  for (const entries of Object.values(config.hooks)) {
-    for (const entry of entries) {
-      assert.equal(entry.type, 'command');
-      assert.equal(entry.bash, entry.powershell);
-      const relative = entry.bash.match(/\$\{PLUGIN_ROOT\}\/([^"]+)/)[1];
-      assert.ok(fs.existsSync(path.join(root, relative)));
-    }
-  }
-  const result = hook('copilot/session-start.mjs', {});
-  assert.equal(result.status, 0);
-  const { additionalContext } = JSON.parse(result.stdout);
-  for (const name of ['AL-start', 'AL-refactor', 'AL-brainstorm', 'AL-implement', 'AL-commit']) assert.ok(additionalContext.includes(name));
-  assert.match(additionalContext, /then STOP/);
-  assert.match(additionalContext, /bc-workflow/);
-  assert.doesNotMatch(additionalContext, /al-workflow|\/done/);
-  const legacy = hook('hooks/session-start.mjs', {});
-  assert.equal(legacy.status, 0);
-  assert.match(legacy.stdout, /^AL agent harness/);
+test('the AGENTS.md block carries the harness, precision, BCQuality, base-app-first and effort rules', () => {
+  const text = flat(read('templates/AGENTS.md'));
+  assert.match(text, /\/AL-brainstorm/);
+  assert.match(text, /\/AL-implement/);
+  assert.match(text, /\/AL-review/);
+  assert.match(text, /\/AL-commit/);
+  assert.match(text, /BCQuality/);
+  assert.match(text, /base application first/i);
+  assert.match(text, /full feature with about X lines/i);
+  assert.match(text, /80% of it with about 0\.1X/);
+  assert.match(text, /about 5 failing/);
+  assert.match(flat(read('agents/al-coder.md')), /80%|effort/i);
 });
 
-test('Copilot guardrail denies literal UI writes and patch writes without granting permissions', () => {
-  for (const event of [
-    { toolName: 'create', toolArgs: { path: 'app\\Example.al', file_text: "Error('literal');" } },
-    { toolName: 'edit', toolArgs: JSON.stringify({ path: 'app\\Example.al', new_str: "Message(StrSubstNo('literal'));" }) },
-    { toolName: 'apply_patch', toolArgs: { input: "*** Begin Patch\n*** Update File: app\\Example.al\n+Confirm('literal');\n*** End Patch" } },
-    { toolName: 'powershell', toolArgs: { command: "echo \"Error('literal');\" > app\\Example.al" } },
-  ]) {
-    const result = hook('copilot/no-literal-ui-text.mjs', event);
-    assert.equal(result.status, 0);
-    assert.equal(JSON.parse(result.stdout).permissionDecision, 'deny');
-    assert.match(JSON.parse(result.stdout).permissionDecisionReason, /Declare a Label/);
-  }
-  for (const event of [
-    { toolName: 'create', toolArgs: { path: 'app\\Example.al', file_text: 'Error(MyErr);' } },
-    { toolName: 'create', toolArgs: { path: 'rules\\Example.bad.al', file_text: "Error('literal');" } },
-    { toolName: 'read', toolArgs: { path: 'app\\Example.al' } }, '{ malformed',
-  ]) {
-    const result = hook('copilot/no-literal-ui-text.mjs', event);
-    assert.equal(result.status, 0);
-    assert.equal(result.stdout, '');
-  }
+test('object IDs come from the local index script, never Ninja', () => {
+  const skill = flat(read('skills/al-object-index/SKILL.md'));
+  assert.match(skill, /Get-ALObjectIndex\.ps1/);
+  assert.match(skill, /-NextId/);
+  assert.match(skill, /docs\/knowledge/);
+  assert.match(flat(readRepo('AGENTS.md')), /Get-ALObjectIndex\.ps1/);
 });
 
-test('legacy Claude guardrail remains independent of Copilot protocol', () => {
-  const result = hook('hooks/no-literal-ui-text.mjs',
-    { tool_name: 'Write', tool_input: { file_path: 'app/Example.al', content: "Error('literal');" } });
-  assert.equal(result.status, 2);
-  assert.match(result.stderr, /Label/);
-  const safe = hook('hooks/no-literal-ui-text.mjs',
-    { tool_name: 'Write', tool_input: { file_path: 'app/Example.al', content: 'Error(MyErr);' } });
-  assert.equal(safe.status, 0);
-  assert.equal(safe.stdout, '');
+test('spec template is mirrored, dated and carries the implementation log', () => {
+  assert.equal(read('templates/spec-TEMPLATE.md'), readRepo('specs/TEMPLATE.md'));
+  const template = read('templates/spec-TEMPLATE.md');
+  assert.match(template, /^---\r?\nstatus: draft\r?\ndate: <YYYY-MM-DD>/);
+  assert.match(template, /Implementation Log|Change log/i);
+  for (const file of fs.readdirSync(path.join(repo, 'specs')).filter((name) => /^\d+-.*\.md$/.test(name))) {
+    const text = readRepo(`specs/${file}`);
+    assert.match(text, /^---\r?\n(?:[a-z-]+: .*\r?\n)*?status: (draft|approved|implemented)\r?\n(?:[a-z-]+: .*\r?\n)*?date: \d{4}-\d{2}-\d{2}\r?\n/, file);
+  }
 });

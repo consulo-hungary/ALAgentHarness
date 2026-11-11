@@ -26,4 +26,4 @@ diagnostics; GREEN only after a real zero-error build of current authorized sour
 Always report `Tests: not run`. Source edits invalidate older package/GREEN/DoD/review
 evidence; the coordinator must rerun required validation within consent or hand off to the human.
 
-MCP server missing or failing (3 attempts in total): stop, return `QUESTION: MCP <server> failed 3x: <tool>: <error>` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).
+MCP server missing or failing (about 5 failing requests without improvement): stop, return `QUESTION: MCP <server> failed ~5x: <tool>: <error>; done: ...; check manually: ...` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

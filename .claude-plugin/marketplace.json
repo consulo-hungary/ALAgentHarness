@@ -9,7 +9,7 @@
       "name": "al-agent-harness",
       "source": "./plugin",
       "description": "Budget-first Business Central brainstorming/specs, optional code-only implementation and opt-in full mode.",
-      "version": "2.2.0"
+      "version": "3.0.0"
     }
   ],
   "metadata": {

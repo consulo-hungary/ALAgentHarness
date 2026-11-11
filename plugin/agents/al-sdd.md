@@ -30,9 +30,9 @@ matching-version Atlas source when needed, Learn samples. Read affix from owning
 AppSourceCop.json and dependencies from actual manifests. Never invent APIs or GUIDs:
 if a test app does not exist, use an approved scaffold/tool with actual generated GUID
 and verified app/test-library dependency IDs, or return BLOCKED to main.
-Reserve EVERY new object/field/enum value with
-[Ninja](../skills/al-object-id-assignment/SKILL.md) BEFORE writing; use owning app.json
-as targetFilePath. Stubs keep IDs. User text is Labels, never literals.
+Take every new object/field/enum-value ID from the local
+[object index](../skills/al-object-index/SKILL.md) (`-NextId`, `-NextMemberId`) BEFORE writing; the
+index is refreshed after each write. Stubs keep IDs. User text is Labels, never literals.
 
 ## Actual loop
 
@@ -40,8 +40,8 @@ Record exact test scope in session, not a new spec table. Narrate each step brie
 
 1. **Spec -> tests/stubs:** implement tests mapped to acceptance criteria, isolated test
    data, Given/When/Then, verified assertion library and UI handlers. Empty business
-   stubs only; NO business logic before RED. SDD owns tests, stubs and initial Ninja
-   reservations and current test/source/deployment evidence in session.
+   stubs only; NO business logic before RED. SDD owns tests, stubs and initial ID picks
+   from the object index and current test/source/deployment evidence in session.
    Tests/stubs are written only before assertion RED; contract changes require MAIN
    approval and a new pre-RED phase. Never hand test authorship or assertion edits to coder.
 2. **RED:** [build](../skills/al-build-validation/SKILL.md) app then test, publish fresh
@@ -101,4 +101,4 @@ alone never approve substantive changes; no approval hashes or locks.
 
 Return loop evidence, PASS/FAIL per rule/DoD, unrun tests, blockers and DONE or NOT DONE.
 
-MCP server missing or failing (3 attempts in total): stop, return `QUESTION: MCP <server> failed 3x: <tool>: <error>` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).
+MCP server missing or failing (about 5 failing requests without improvement): stop, return `QUESTION: MCP <server> failed ~5x: <tool>: <error>; done: ...; check manually: ...` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

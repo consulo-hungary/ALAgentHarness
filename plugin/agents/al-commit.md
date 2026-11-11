@@ -29,6 +29,10 @@ Review for grouping and sensitive data, not a new brainstorm or full DoD pipelin
   explicit expected diffs, rejects mixed index/worktree use in independent mode, performs
   sensitive-file checks and verifies leftover index/worktree state. Read every selected
   diff before passing its expected snapshot. It does NOT decide task ownership for you.
+- A commit with AL, app.json or spec changes MUST include the updated
+  `docs/knowledge/technical-overview.md` (and refreshed `object-index.json`) in the same
+  group. If they are not updated, stop and ask MAIN to run the project-docs step; never
+  edit them yourself and never bypass the pre-commit hook.
 - AL/.al or an actual AL app.json change requires existing targeted green build validation
   BEFORE its commit. No unnecessary sandbox tests, spec or full DoD pipeline just for
   grouping. If required build tools/evidence are absent, block that group.

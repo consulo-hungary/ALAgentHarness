@@ -1,13 +1,12 @@
 {
   "name": "al-agent-harness",
-  "version": "2.2.0",
-  "description": "Budget-first BC brainstorming and lean specs; optional implementation and expensive full mode.",
+  "version": "3.0.0",
+  "description": "Budget-first BC brainstorming, lean specs, local object index and repo init; optional implementation and expensive full mode.",
   "author": { "name": "waldo & AJ" },
   "repository": "https://github.com/waldo1001/DirectionsEmea.ALAgentHarness",
   "license": "MIT",
   "agents": "copilot/agents/",
   "skills": "skills/",
   "commands": "commands/",
-  "hooks": "copilot/hooks.json",
   "mcpServers": ".mcp.json"
 }

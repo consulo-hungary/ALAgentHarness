@@ -1,7 +1,7 @@
 {
   "name": "al-agent-harness",
-  "version": "2.2.0",
-  "description": "Budget-first BC brainstorming and lean specs; optional implementation and expensive full mode.",
+  "version": "3.0.0",
+  "description": "Budget-first BC brainstorming, lean specs, local object index and repo init; optional implementation and expensive full mode.",
   "author": {
     "name": "waldo & AJ"
   },
