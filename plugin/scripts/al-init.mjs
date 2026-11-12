@@ -74,7 +74,6 @@ export function planInit(rootArg) {
     knowledgeCandidates: knowledgeCandidates(root),
     has: {
       agents: fs.existsSync(path.join(root, 'AGENTS.md')),
-      claude: fs.existsSync(path.join(root, 'CLAUDE.md')),
       copilotInstructions: fs.existsSync(path.join(root, '.github', 'copilot-instructions.md')),
       guardrails: fs.existsSync(path.join(root, '.github', 'hooks', 'al-guardrails.mjs')),
       projectOverview: fs.existsSync(path.join(root, 'docs', 'knowledge', 'project-overview.md')),
@@ -151,28 +150,10 @@ export function applyInit(rootArg, { moveSpecs = false } = {}) {
 
   merge('AGENTS.md', 'AGENTS.md');
   merge('.github/copilot-instructions.md', 'copilot-instructions.md');
-  const claudeFile = inside(root, 'CLAUDE.md');
-  if (!fs.existsSync(claudeFile)) put('CLAUDE.md', '@AGENTS.md\n');
-  else if (!/@AGENTS\.md/.test(read(claudeFile))) {
-    fs.appendFileSync(claudeFile, '\n@AGENTS.md\n');
-    log('updated', 'CLAUDE.md', 'import of AGENTS.md added');
-  } else log('kept', 'CLAUDE.md');
 
   put('.github/hooks/al-guardrails.mjs', read(path.join(TEMPLATES, 'hooks', 'al-guardrails.mjs')), { overwrite: true });
   put('.github/hooks/al-guardrails.json', read(path.join(TEMPLATES, 'hooks', 'al-guardrails.json')), { overwrite: true });
   put('.github/hooks/al-docs-check.mjs', read(path.join(TEMPLATES, 'hooks', 'al-docs-check.mjs')), { overwrite: true });
-
-  const claudeSettings = inside(root, '.claude/settings.json');
-  if (!fs.existsSync(claudeSettings)) {
-    const settings = {
-      hooks: {
-        PreToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: 'node .github/hooks/al-guardrails.mjs' }] }],
-      },
-    };
-    put('.claude/settings.json', `${JSON.stringify(settings, null, 2)}\n`);
-  } else {
-    log('manual', '.claude/settings.json', 'exists: add a PreToolUse hook running `node .github/hooks/al-guardrails.mjs` yourself');
-  }
 
   const gitDir = path.join(root, '.git');
   if (fs.existsSync(gitDir) && fs.statSync(gitDir).isDirectory()) {

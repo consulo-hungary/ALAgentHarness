@@ -23,15 +23,17 @@ Run `/AL-init` once. It scans the workspace (`scripts/al-init.mjs`), asks one ba
 specs into `docs/specs/`? which knowledge documents matter?), then:
 
 - creates the three docs folders and `docs/knowledge/project-overview.md` + `technical-overview.md`;
-- writes the harness block into `AGENTS.md` (and `CLAUDE.md` import, `.github/copilot-instructions.md`), so every
+- writes the harness block into root `AGENTS.md` and `.github/copilot-instructions.md`, so every
   chat in the repo follows the rules: use the harness, be precise, follow BCQuality, base-app field/event first,
   the effort rule (full feature with X lines or 80% with about 0.1X), halt after about 5 failing tool requests;
 - deploys the guardrails that plugin-level hooks could not reliably deliver: `.github/hooks/al-guardrails.*` (no
-  literal UI text, no digging in base-app packages), a `.claude/settings.json` entry, and a git pre-commit check;
+  literal UI text, no digging in base-app packages), and a git pre-commit check. Copilot discovers the shared
+  hook configuration directly from `.github/hooks/`; no separate settings file is generated;
 - builds `docs/knowledge/object-index.json` and lets the agent fill both overviews from the code.
 
-`.github/AGENTS.md` is not auto-loaded by Copilot, so the rules live in root `AGENTS.md` plus
-`.github/copilot-instructions.md`. Re-running `/AL-init` refreshes only the managed block.
+Root `AGENTS.md` and `.github/copilot-instructions.md` are supported project instruction files; keeping the
+managed rules at the repository root also makes them available to other tools that recognize `AGENTS.md`.
+`/AL-init` does not create or modify `CLAUDE.md` or `.claude/`. Re-running it refreshes only the managed block.
 
 ## Object index (no subscription)
 

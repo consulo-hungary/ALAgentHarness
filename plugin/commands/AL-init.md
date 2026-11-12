@@ -10,9 +10,9 @@ Target the active workspace, not this plugin.
    command's `commands/` directory). Show the findings and ask ONE batch of questions: move existing spec
    files into `docs/specs/` (`--move-specs`), and which documents in `docs/knowledge` are relevant.
 2. Apply: run `node <plugin>/scripts/al-init.mjs apply <workspace> [--move-specs]`. It creates `docs/specs`,
-   `docs/knowledge` and `docs/generated`, the overview skeletons, the harness block in `AGENTS.md` (plus
-   `CLAUDE.md` import and `.github/copilot-instructions.md`), and the guardrail hooks in `.github/hooks/`,
-   `.claude/settings.json` and the git pre-commit docs check. It never overwrites user text outside its block.
+   `docs/knowledge` and `docs/generated`, the overview skeletons, the harness block in root `AGENTS.md`,
+   `.github/copilot-instructions.md`, Copilot hooks in `.github/hooks/`, and the git pre-commit docs check.
+   It does not create or modify Claude files, and never overwrites user text outside its managed block.
 3. Index: run [al-object-index](../skills/al-object-index/SKILL.md) to create `docs/knowledge/object-index.json`.
 4. Write: fill `project-overview.md` (goal, features by BC topic, dated history) and `technical-overview.md`
    (every object's purpose, new fields, specs) from the code, the index and the knowledge documents. Read

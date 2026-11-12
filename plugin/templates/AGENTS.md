@@ -48,5 +48,4 @@ checked manually, and ask whether the feature is really wanted. Do not retry end
 - Never claim a green build without a build. Default implementation: one build, no automatic repair loop.
 - Never rewrite git history; never push or open a PR without being asked.
 - Tests, mutation checks, independent review, translation and full SDD only on explicit request (token cost).
-- Use the latest enabled Claude model (Haiku or Sonnet); GPT is fine for writing docs. Opus only after the user grants it.
 <!-- al-harness:end -->
