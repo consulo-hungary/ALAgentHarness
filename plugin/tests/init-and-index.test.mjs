@@ -37,16 +37,21 @@ test('al-init plan is read-only and reports specs, apps and missing folders', ()
 test('al-init apply creates folders, overviews, instructions and guardrails; never touches user text', () => workspace((dir, put) => {
   put('app/app.json', app);
   put('AGENTS.md', '# My rules\n\nKeep this.\n');
+  put('.github/agent/AGENTS.md', '# Shared rules\n\nKeep these.\n');
+  put('.github/copilot-instructions.md', '# Existing instructions\n\nKeep this too.\n');
   const result = applyInit(dir);
   for (const relative of ['docs/specs/TEMPLATE.md', 'docs/knowledge/project-overview.md',
-    'docs/knowledge/technical-overview.md', '.github/copilot-instructions.md',
+    'docs/knowledge/technical-overview.md', '.github/agent/AGENTS.md', '.github/copilot-instructions.md',
     '.github/hooks/al-guardrails.mjs', '.github/hooks/al-guardrails.json', '.github/hooks/al-docs-check.mjs',
   ]) assert.ok(fs.existsSync(path.join(dir, relative)), relative);
   assert.ok(!fs.existsSync(path.join(dir, 'CLAUDE.md')));
   assert.ok(!fs.existsSync(path.join(dir, '.claude')));
   assert.ok(fs.statSync(path.join(dir, 'docs/generated')).isDirectory());
-  const agents = read(dir, 'AGENTS.md');
-  assert.match(agents, /^# My rules\n\nKeep this\./);
+  assert.equal(read(dir, 'AGENTS.md'), '# My rules\n\nKeep this.\n');
+  const agents = read(dir, '.github/agent/AGENTS.md');
+  assert.match(agents, /^# Shared rules\n\nKeep these\./);
+  assert.match(read(dir, '.github/copilot-instructions.md'), /^# Existing instructions\n\nKeep this too\./);
+  assert.match(read(dir, '.github/copilot-instructions.md'), /\.github\/agent\/AGENTS\.md/);
   assert.match(agents, /AL Agent Harness/);
   assert.match(agents, /80% of it with about 0\.1X/);
   assert.match(agents, /base application first|Base application first/i);
@@ -63,9 +68,9 @@ test('al-init is idempotent, keeps existing files and refreshes only its own blo
   put('app/app.json', app);
   applyInit(dir);
   fs.writeFileSync(path.join(dir, 'docs/knowledge/project-overview.md'), 'my edits\n');
-  const before = read(dir, 'AGENTS.md');
+  const before = read(dir, '.github/agent/AGENTS.md');
   const second = applyInit(dir);
-  assert.equal(read(dir, 'AGENTS.md'), before);
+  assert.equal(read(dir, '.github/agent/AGENTS.md'), before);
   assert.equal(read(dir, 'docs/knowledge/project-overview.md'), 'my edits\n');
   assert.ok(second.actions.every((action) => ['kept', 'manual'].includes(action.kind)),
     JSON.stringify(second.actions.filter((action) => !['kept', 'manual'].includes(action.kind))));

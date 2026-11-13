@@ -73,7 +73,8 @@ export function planInit(rootArg) {
     specCandidates: specCandidates(root),
     knowledgeCandidates: knowledgeCandidates(root),
     has: {
-      agents: fs.existsSync(path.join(root, 'AGENTS.md')),
+      agents: fs.existsSync(path.join(root, '.github', 'agent', 'AGENTS.md')),
+      rootAgents: fs.existsSync(path.join(root, 'AGENTS.md')),
       copilotInstructions: fs.existsSync(path.join(root, '.github', 'copilot-instructions.md')),
       guardrails: fs.existsSync(path.join(root, '.github', 'hooks', 'al-guardrails.mjs')),
       projectOverview: fs.existsSync(path.join(root, 'docs', 'knowledge', 'project-overview.md')),
@@ -148,7 +149,7 @@ export function applyInit(rootArg, { moveSpecs = false } = {}) {
   put('docs/knowledge/project-overview.md', fill(read(path.join(TEMPLATES, 'project-overview.md'))));
   put('docs/knowledge/technical-overview.md', fill(read(path.join(TEMPLATES, 'technical-overview.md'))));
 
-  merge('AGENTS.md', 'AGENTS.md');
+  merge('.github/agent/AGENTS.md', 'AGENTS.md');
   merge('.github/copilot-instructions.md', 'copilot-instructions.md');
 
   put('.github/hooks/al-guardrails.mjs', read(path.join(TEMPLATES, 'hooks', 'al-guardrails.mjs')), { overwrite: true });

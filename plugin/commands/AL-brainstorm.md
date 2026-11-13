@@ -7,6 +7,8 @@ Follow [bc-workflow](../skills/bc-workflow/SKILL.md) in the MAIN chat.
 Use `$ARGUMENTS` as the idea; target the active consuming workspace, not this plugin.
 Default: the selected Claude model (Sonnet-class), no Opus, no subagents, at most two batched
 question rounds, then main writes an at-most-100-line spec and one README index line. STOP.
+Use the host's interactive question tool (in VS Code, `vscode_askQuestions`) for question boxes with
+selectable options and recommended defaults. Fall back to plain text only if no such tool is available.
 `--deep` explicitly permits at most ONE optional Opus consultation per feature, after a cost
 estimate and consent. Never block on model availability. Main retains all questions and spec writing.
 Check the base app for an existing field or event first, and apply the effort rule

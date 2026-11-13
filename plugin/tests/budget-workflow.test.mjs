@@ -16,6 +16,14 @@ test('brainstorm stops after a spec of at most 100 lines; implementation is expl
   assert.match(read('commands/AL-implement.md'), /ONE build|one build/);
 });
 
+test('brainstorm uses interactive question boxes when available', () => {
+  for (const text of [read('commands/AL-brainstorm.md'), read('skills/bc-workflow/SKILL.md')]) {
+    assert.match(text, /vscode_askQuestions/);
+    assert.match(text, /selectable options/);
+    assert.match(text, /plain text only|only fall back to plain text/i);
+  }
+});
+
 test('review writes only a report under docs/generated and does not edit code', () => {
   const text = read('commands/AL-review.md');
   assert.match(text, /docs\/generated\/reviews/);
@@ -27,6 +35,9 @@ test('init deploys hooks into the repo and keeps a human in the loop for existin
   assert.match(text, /al-init\.mjs/);
   assert.match(text, /\.github\/hooks/);
   assert.match(text, /technical-overview/);
+  assert.match(text, /\.github\/agent\/AGENTS\.md/);
+  assert.match(text, /Transfer the useful existing Copilot instructions/);
+  assert.match(text, /keep uncertain or conflicting text/i);
 });
 
 test('model policy: Claude tiers, GPT for docs, latest enabled version, Opus only on request', () => {

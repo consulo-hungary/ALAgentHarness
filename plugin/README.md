@@ -7,8 +7,8 @@ translation are explicit opt-ins because they cost tokens.
 
 | Command | Boundary |
 |---------|----------|
-| `/AL-init` | Agentify a new or existing repo: `docs/specs`, `docs/knowledge`, `docs/generated`, project and technical overview, `AGENTS.md` rules, guardrail hooks, git docs check. Never overwrites user text. |
-| `/AL-brainstorm <idea>` | MAIN, Claude Sonnet-class, one batch of questions (at most two rounds), lean spec (up to 100 lines), then STOP. `--deep` allows ONE Opus consultation after estimate/consent. |
+| `/AL-init` | Agentify a new or existing repo: docs, `.github/agent/AGENTS.md` rules, guardrail hooks and git docs check. Preserves existing instructions during migration. |
+| `/AL-brainstorm <idea>` | MAIN, Claude Sonnet-class, interactive question boxes in one batch (at most two rounds), lean spec (up to 100 lines), then STOP. `--deep` allows ONE Opus consultation after estimate/consent. |
 | `/AL-implement <spec>` | Explicit code-only step, ONE build after estimate/consent, then docs and spec log update. `--full` is the EXPENSIVE SDD/tests/mutation/DoD/review bundle. |
 | `/AL-review [scope]` | Read-only review. No scope = whole codebase; `/AL-review the object IDs` = objects, names, IDs, fields, gaps. Writes `docs/generated/reviews/<date>-<slug>.md`. |
 | `/AL-commit` | Updates the technical docs first, then small local commits; preserves unrelated staging; no push or PR. |
@@ -23,17 +23,18 @@ Run `/AL-init` once. It scans the workspace (`scripts/al-init.mjs`), asks one ba
 specs into `docs/specs/`? which knowledge documents matter?), then:
 
 - creates the three docs folders and `docs/knowledge/project-overview.md` + `technical-overview.md`;
-- writes the harness block into root `AGENTS.md` and `.github/copilot-instructions.md`, so every
-  chat in the repo follows the rules: use the harness, be precise, follow BCQuality, base-app field/event first,
+- writes the harness block into `.github/agent/AGENTS.md` and a routing block into `.github/copilot-instructions.md`;
+  MAIN reviews existing Copilot instructions and transfers useful rules without losing uncertain content. The rules
+  cover the harness, precision, BCQuality, base-app field/event first,
   the effort rule (full feature with X lines or 80% with about 0.1X), halt after about 5 failing tool requests;
 - deploys the guardrails that plugin-level hooks could not reliably deliver: `.github/hooks/al-guardrails.*` (no
   literal UI text, no digging in base-app packages), and a git pre-commit check. Copilot discovers the shared
   hook configuration directly from `.github/hooks/`; no separate settings file is generated;
 - builds `docs/knowledge/object-index.json` and lets the agent fill both overviews from the code.
 
-Root `AGENTS.md` and `.github/copilot-instructions.md` are supported project instruction files; keeping the
-managed rules at the repository root also makes them available to other tools that recognize `AGENTS.md`.
-`/AL-init` does not create or modify `CLAUDE.md` or `.claude/`. Re-running it refreshes only the managed block.
+Copilot is instructed to read `.github/agent/AGENTS.md` via `.github/copilot-instructions.md`. Existing root
+`AGENTS.md` files remain untouched. `/AL-init` does not create or modify `CLAUDE.md` or `.claude/`.
+Re-running the script refreshes only managed blocks; MAIN avoids duplicating transferred instructions.
 
 ## Object index (no subscription)
 
