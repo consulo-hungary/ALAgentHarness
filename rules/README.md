@@ -9,7 +9,7 @@ agent writes and what `/done` checks. No prompt surgery, no skill edits.
 | Rule | In one line |
 |------|-------------|
 | `meth-codeunit-single-public-procedure` | table business logic lives in a Meth codeunit with exactly one public procedure |
-| `tableextension-pte-suffix` | new fields and procedures in a tableextension end in ` PTE` |
+| `tableextension-field-affix` | new tableextension fields use the owning app's affix |
 | `page-no-local-procedures` | pages and page extensions have no local procedures |
 | `label-naming` | Labels are named `<Context><Reason>Err`, `...Msg`, `...Qst` |
 | `single-object-per-file` | one AL object per `.al` file |
@@ -23,7 +23,8 @@ agent writes and what `/done` checks. No prompt surgery, no skill edits.
 
 ## Add a rule (two minutes)
 
-Three files, same base name:
+Normally use three files with the same base name; an article with inline examples can also
+stand alone:
 
 - `<rule-id>.md` - the article, at most ~60 lines, in the format below.
 - `<rule-id>.good.al` - the pattern to follow.

@@ -71,6 +71,18 @@ test('the AGENTS.md block carries the harness, precision, BCQuality, base-app-fi
   assert.match(flat(read('agents/al-coder.md')), /80%|effort/i);
 });
 
+test('tableextension naming follows the owning app rather than a hard-coded PTE suffix', () => {
+  const rule = flat(readRepo('rules/tableextension-field-affix.md'));
+  assert.match(rule, /AppSourceCop\.json/);
+  assert.match(rule, /Do not add `PTE` merely/);
+  assert.match(rule, /existing extension fields/);
+  assert.match(rule, /workspace root `AGENTS\.md`/);
+  assert.match(rule, /absent or ambiguous, ask/);
+  assert.match(rule, /Procedures do not require an extra suffix/);
+  assert.match(flat(read('commands/AL-init.md')), /for each app with no configured `AppSourceCop\.json` affix/);
+  assert.ok(!fs.existsSync(path.join(repo, 'rules', 'tableextension-pte-suffix.md')));
+});
+
 test('object IDs come from the local index script, never Ninja', () => {
   const skill = flat(read('skills/al-object-index/SKILL.md'));
   assert.match(skill, /Get-ALObjectIndex\.ps1/);

@@ -7,7 +7,7 @@ user-invocable: false
 # Company Rules
 
 The rules in `rules/` are this company's opinions about AL, one article per rule, each with a
-`.good.al` and a `.bad.al` sample. They are **mandatory**.
+`.good.al` and a `.bad.al` sample where available. The articles are **mandatory**.
 
 They come **on top of BCQuality**, not instead of it. BCQuality is the general layer
 (Microsoft + community best practice) and still applies in full; the company rules add what
@@ -38,13 +38,14 @@ miss.
 ### 3. Read the selected rules in full
 
 Use targeted ranges and reuse articles already read this session. Read a sample only when
-the pattern is unclear; respect bc-workflow's research budget. The samples are authoritative.
-Normative are `## Best Practice` and `## Anti Pattern`; the `## Description` says how to check.
+the pattern is unclear; respect bc-workflow's research budget. Follow the article's `## Best
+Practice` and `## Anti Pattern`; its `## Description` says how to check. Do not follow samples
+that the article explicitly identifies as retired.
 
 ### 4. Apply
 
-- **Writing code:** follow the `.good.al` pattern as you write; never emit the `.bad.al`
-  pattern.
+- **Writing code:** follow the article and any applicable `.good.al` pattern; never emit the
+  applicable `.bad.al` pattern.
 - **Designing:** mention only rules that materially affect a business/design decision;
   do not pad the spec with a rule checklist.
 - **Checking:** run the check from the rule's Description on every changed `.al` file.
@@ -53,7 +54,7 @@ Normative are `## Best Practice` and `## Anti Pattern`; the `## Description` say
 
 ```
 Company rules (rules/, 5 found, 4 applicable)
-  PASS  tableextension-pte-suffix          app/src/DIRCustomer.TableExt.al:5 "Preferred Carrier PTE"
+  PASS  tableextension-field-affix         app/src/DIRCustomer.TableExt.al:5 "DIR Preferred Carrier"
   FAIL  label-naming                       app/src/DIRCustomerCheckCarrierMeth.Codeunit.al:22
         CarrierLabel passed to Error() -> rename to NoPreferredCarrierErr
   PASS  single-object-per-file             6 files, 1 object each

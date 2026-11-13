@@ -23,8 +23,12 @@ If a simple feature needs a lot of new code (new tables, setup pages, codeunits)
 ### How we write AL
 
 - Extend, never modify: `tableextension`, `pageextension`, event subscribers. Follow BCQuality and `rules/` if present.
-- Business logic in codeunits, not page triggers. One object per file. Every new object name carries the affix
-  from `mandatoryAffixes` in `AppSourceCop.json`.
+- Business logic in codeunits, not page triggers. One object per file. Use the owning app's configured
+  `AppSourceCop.json` affix for new object names and tableextension fields. Never add `PTE` merely because
+  the app is a per-tenant extension. If no affix is configured, inspect existing extension fields in that
+  app and record a clearly evidenced prefix or suffix, scoped to the app, in the workspace root `AGENTS.md`
+  outside managed blocks; preserve existing instructions. If absent or ambiguous, ask the developer rather
+  than guessing. A configured affix takes precedence over an inferred convention.
 - Text for `Error`, `Message` and `Confirm` is a `Label`, never a literal (a hook blocks literals).
 - Identify AL objects as `Type ID "Name"`: `Table 18 "Customer"`.
 

@@ -144,7 +144,7 @@ Definition of Done - <resolved specPath>   base <short sha>   files <n>
   [x] D5 spec                 implemented, 0 open questions
   [x] D6 tests                DIRCarrierTests.Codeunit.al: 3 of 3 spec tests present
   [x] D7 company rules        5 rules: 4 PASS, 1 N/A
-         PASS tableextension-pte-suffix   DIRCustomer.TableExt.al:5
+         PASS tableextension-field-affix  DIRCustomer.TableExt.al:5
          ...
   [x] D8 tests ran            3 of 3 passed, al_run_tests on codeunit 80100 after publish
 Verdict: NOT DONE (1 red: D3)

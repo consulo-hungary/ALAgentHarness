@@ -14,7 +14,10 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 
 ## Look it up, never assume
 
-- **Affix:** `mandatoryAffixes` in `app/AppSourceCop.json`. Every new object name carries it.
+- **Affix:** use the owning app's `AppSourceCop.json` configuration for new object names and
+  tableextension fields; never add `PTE` just because the app is a PTE. If no affix is configured,
+  inspect existing extension fields in that app, record a clear convention in the workspace root
+  `AGENTS.md`, and use it. If unclear, ask the developer rather than inventing one.
 - **Object IDs:** from the local object index (`plugin/scripts/Get-ALObjectIndex.ps1`), never picked or guessed. No Ninja.
 - **BC version:** `application` and `runtime` in `app/app.json`.
 

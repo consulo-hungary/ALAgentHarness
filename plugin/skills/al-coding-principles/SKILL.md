@@ -16,8 +16,11 @@ Apply when designing or writing AL. The code-writing agent honours these without
    version when the user has no preference. Do not start writing before the answer.
 3. **BCQuality and company rules.** Follow BCQuality; load [company-rules](../company-rules/SKILL.md). Where
    the two disagree, company rules win.
-4. **IDs and names.** IDs only from [al-object-index](../al-object-index/SKILL.md). Names carry the affix
-   from `AppSourceCop.json`. Extend, never modify; logic in codeunits; UI text in Labels.
+4. **IDs and names.** IDs only from [al-object-index](../al-object-index/SKILL.md). Use the owning app's
+   `AppSourceCop.json` affix for new object names and tableextension fields; never add `PTE` by default.
+   If no affix is configured, inspect that app's existing extension fields and record a clearly evidenced
+   convention in root `AGENTS.md`, preserving existing text. Ask if evidence is absent or ambiguous.
+   Extend, never modify; logic in codeunits; UI text in Labels.
 5. **Halt on repeated tool failure.** After about 5 failing MCP or tool requests without improvement, stop.
    Give a short progress statement (done, not done), list what the developer must check manually, and ask
    whether the user really wants this feature. Follow the [failure policy](../../references/mcp-failure-policy.md).

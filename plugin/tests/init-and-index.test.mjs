@@ -57,6 +57,12 @@ test('al-init apply creates folders, overviews, instructions and guardrails; nev
   assert.match(agents, /base application first|Base application first/i);
   assert.match(agents, /BCQuality/);
   assert.match(agents, /about 5 failing/);
+  assert.match(agents, /Never add `PTE` merely because/);
+  assert.match(agents, /AppSourceCop\.json/);
+  assert.match(agents, /inspect existing extension fields/);
+  assert.match(agents, /workspace root `AGENTS\.md`/);
+  assert.match(agents, /absent or ambiguous, ask/);
+  assert.match(agents, /configured affix takes precedence/);
     assert.match(read(dir, 'docs/knowledge/project-overview.md'), /Fixture App/);
     assert.match(read(dir, 'docs/knowledge/technical-overview.md'), /^---\r?\nstatus: draft\r?\ndate: \d{4}-\d{2}-\d{2}\r?\n---/);
   assert.equal(JSON.parse(read(dir, '.github/hooks/al-guardrails.json')).hooks.preToolUse[0].powershell,
