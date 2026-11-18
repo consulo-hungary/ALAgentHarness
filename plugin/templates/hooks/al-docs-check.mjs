@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 // Git pre-commit check, deployed by /AL-init as .github/hooks/al-docs-check.mjs.
-// A commit that changes AL code, app.json or a spec must also stage the technical documentation
-// (docs/knowledge/technical-overview.md). Blocks with exit code 1 and says what to do.
-// Emergency skip for the developer: AL_DOCS_SKIP=1 git commit ...
+// Warn about missing technical documentation without blocking commits or pushes.
 import { execFileSync } from 'node:child_process';
 
 const CODE = /(?:^|\/)(?:[^/]+\.al|app\.json)$|^docs\/specs\/[^/]+\.md$/i;
@@ -26,10 +24,8 @@ if (process.argv[1] && /al-docs-check\.mjs$/.test(process.argv[1].replace(/\\/g,
   }
   if (missingDocs(staged)) {
     console.error(
-      `Commit blocked: AL code, app.json or a spec changed but ${DOC} is not staged.\n` +
-        `Update it (what changed per object, new fields, new specs; dated entry), then 'git add ${DOC}'.\n` +
-        `Ask the agent: "update the technical docs for this commit". Developer override: AL_DOCS_SKIP=1.`
+      `Documentation warning: AL code, app.json or a spec changed but ${DOC} is not staged.\n` +
+        `Update it when relevant, or leave it unchanged when intentional. This warning does not block Git.`
     );
-    process.exit(1);
   }
 }

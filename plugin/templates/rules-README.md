@@ -8,7 +8,7 @@ agent writes and what internal DoD checks. No prompt surgery, no skill edits.
 
 | Rule | In one line |
 |------|-------------|
-| `meth-codeunit-single-public-procedure` | table business logic lives in a Meth codeunit with exactly one public procedure |
+| `meth-codeunit-single-public-procedure` | smallest clear business API; no mandatory Meth layers (legacy samples retired) |
 | `tableextension-field-affix` | new tableextension fields use the owning app's affix |
 | `page-no-local-procedures` | pages and page extensions have no local procedures |
 | `label-naming` | Labels are named `<Context><Reason>Err`, `...Msg`, `...Qst` |

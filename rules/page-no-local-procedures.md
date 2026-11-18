@@ -17,8 +17,9 @@ calculations and decisions belong in the appropriate codeunit, not in the page.
 
 Existing page procedures are grandfathered: changing a page does not require refactoring
 unrelated existing logic. Do not add business logic to those procedures; move it when the
-scope of a change calls for it. Follow the source-table and Meth pattern where appropriate
-for new table business logic (see `meth-codeunit-single-public-procedure`).
+scope of a change calls for it. Call existing application procedures directly; do not create
+a table wrapper or Meth layer just to move a call out of the page. See
+`meth-codeunit-single-public-procedure` for the smallest-clear-API rule.
 
 Check: review new or changed page procedures and triggers for business logic; allow UI-only
 helpers and do not require unrelated legacy procedures to be rewritten.

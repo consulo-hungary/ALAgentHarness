@@ -27,9 +27,11 @@ without edits.
 The five commands `AL-init`, `AL-brainstorm`, `AL-implement`, `AL-review` and `AL-commit` support standalone
 **GitHub Copilot CLI** (`copilot`), not the GitHub repository CLI (`gh`).
 
-The plugin keeps its Claude manifest and canonical agent instructions. A legacy Copilot root `plugin.json`
-registers command, skill and Copilot agent-adapter paths. Copilot agents use `.agent.md` files; adapters refer to
-the canonical workflows rather than maintaining a second implementation.
+The plugin keeps its Claude manifest and one agent file per specialist in `agents/`. Each agent's `tools` list
+names both the Claude spellings (`Read`, `Write`, `Edit`, `mcp__server__tool`) and the Copilot spellings (`read`,
+`edit`, `server/*`); every host ignores the names it does not know. VS Code treats a plugin with
+`.claude-plugin/plugin.json` as Claude format and ignores any second agent folder, so never add a parallel
+Copilot adapter set: it only hides the real agents and leaves the writer without edit tools.
 
 Install the local `plugin` directory with **Chat: Install Plugin from Source** in VS Code, or run
 `copilot plugin install ".\plugin"` from the repository root. Check that the plugin is enabled in the intended

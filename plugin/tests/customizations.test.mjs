@@ -47,14 +47,13 @@ test('skill descriptions are short, double-quoted and the new skills exist', () 
   }
 });
 
-test('copilot adapters are thin and specialists cannot spawn agents', () => {
-  for (const file of fs.readdirSync(path.join(root, 'copilot', 'agents'))) {
-    const text = read(`copilot/agents/${file}`);
-    const name = file.replace('.agent.md', '');
-    assert.ok(text.length < 850, `${file} too long`);
-    assert.ok(text.includes(`../../agents/${name}.md`));
-    if (['al-coder', 'al-build-fixer', 'al-reviewer'].includes(name)) assert.match(text, /^agents: \[\]$/m);
+test('specialists are single files, cannot spawn agents, and write-capable agents list the edit tool', () => {
+  for (const file of fs.readdirSync(path.join(root, 'agents'))) {
+    const text = read(`agents/${file}`);
+    assert.doesNotMatch(text.split('---')[1], /^agents:/m, `${file}: no agents field`);
   }
+  for (const name of ['al-coder', 'al-build-fixer']) assert.match(read(`agents/${name}.md`), /"edit".*"Write"/);
+  assert.doesNotMatch(read('agents/al-reviewer.md').split('---')[1], /"edit"|"Write"|"Edit"/);
 });
 
 test('the AGENTS.md block carries the harness, precision, BCQuality, base-app-first and effort rules', () => {
@@ -65,10 +64,22 @@ test('the AGENTS.md block carries the harness, precision, BCQuality, base-app-fi
   assert.match(text, /\/AL-commit/);
   assert.match(text, /BCQuality/);
   assert.match(text, /base application first/i);
-  assert.match(text, /full feature with about X lines/i);
-  assert.match(text, /80% of it with about 0\.1X/);
+  assert.match(text, /same agreed behavior with the smallest clear implementation/);
+  assert.match(text, /Never silently reduce requirements/);
+  assert.match(text, /Reuse checks already performed/);
+  assert.match(text, /No mandatory Meth layers/);
   assert.match(text, /about 5 failing/);
   assert.match(flat(read('agents/al-coder.md')), /80%|effort/i);
+});
+
+test('implementation and specialist entry points reject layers and log optional concerns', () => {
+  for (const file of ['commands/AL-implement.md', 'skills/bc-workflow/SKILL.md',
+    'agents/al-coder.md', 'agents/al-build-fixer.md', 'agents/al-reviewer.md', 'agents/al-sdd.md']) {
+    const text = flat(read(file));
+    assert.match(text, /optional concerns/i, file);
+    assert.match(text, /spec.*Log|spec log/i, file);
+    assert.match(text, /Meth|wrapper layers/i, file);
+  }
 });
 
 test('tableextension naming follows the owning app rather than a hard-coded PTE suffix', () => {

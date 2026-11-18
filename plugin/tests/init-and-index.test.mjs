@@ -47,13 +47,17 @@ test('al-init apply creates folders, overviews, instructions and guardrails; nev
   assert.ok(!fs.existsSync(path.join(dir, 'CLAUDE.md')));
   assert.ok(!fs.existsSync(path.join(dir, '.claude')));
   assert.ok(fs.statSync(path.join(dir, 'docs/generated')).isDirectory());
-  assert.equal(read(dir, 'AGENTS.md'), '# My rules\n\nKeep this.\n');
+  assert.match(read(dir, 'AGENTS.md'), /^# My rules\n\nKeep this\./);
+  assert.match(read(dir, 'AGENTS.md'), /al-harness:start/);
   const agents = read(dir, '.github/agent/AGENTS.md');
   assert.match(agents, /^# Shared rules\n\nKeep these\./);
   assert.match(read(dir, '.github/copilot-instructions.md'), /^# Existing instructions\n\nKeep this too\./);
   assert.match(read(dir, '.github/copilot-instructions.md'), /\.github\/agent\/AGENTS\.md/);
   assert.match(agents, /AL Agent Harness/);
-  assert.match(agents, /80% of it with about 0\.1X/);
+  assert.match(agents, /same agreed behavior with the smallest clear implementation/);
+  assert.match(agents, /No mandatory Meth layers/);
+  assert.match(agents, /Reuse checks already performed/);
+  assert.match(agents, /optional concerns/);
   assert.match(agents, /base application first|Base application first/i);
   assert.match(agents, /BCQuality/);
   assert.match(agents, /about 5 failing/);
@@ -77,6 +81,8 @@ test('al-init is idempotent, keeps existing files and refreshes only its own blo
   const before = read(dir, '.github/agent/AGENTS.md');
   const second = applyInit(dir);
   assert.equal(read(dir, '.github/agent/AGENTS.md'), before);
+  assert.match(read(dir, 'AGENTS.md'), /al-harness:start/);
+  assert.equal((read(dir, 'AGENTS.md').match(/al-harness:start/g) ?? []).length, 1);
   assert.equal(read(dir, 'docs/knowledge/project-overview.md'), 'my edits\n');
   assert.ok(second.actions.every((action) => ['kept', 'manual'].includes(action.kind)),
     JSON.stringify(second.actions.filter((action) => !['kept', 'manual'].includes(action.kind))));
@@ -111,7 +117,7 @@ test('al-init leaves existing Claude files untouched and preserves git hooks', (
   assert.equal(result.actions.filter((action) => action.kind === 'manual').length, 1);
 }));
 
-test('docs check requires the technical overview for AL, app.json and spec changes', () => {
+test('docs check identifies missing technical overview for AL, app.json and spec changes', () => {
   assert.equal(missingDocs(['app/src/A.Codeunit.al']), true);
   assert.equal(missingDocs(['app/app.json']), true);
   assert.equal(missingDocs(['docs/specs/3-x.md']), true);
@@ -119,6 +125,38 @@ test('docs check requires the technical overview for AL, app.json and spec chang
   assert.equal(missingDocs(['README.md', 'docs/generated/x.md']), false);
   assert.equal(missingDocs(['app\\src\\A.al']), true);
 });
+
+test('documentation warning never blocks a commit without technical docs', () => workspace((dir, put) => {
+  spawnSync('git', ['init', '--quiet'], { cwd: dir });
+  put('.github/hooks/al-docs-check.mjs', 'process.exit(1);\n');
+  applyInit(dir);
+  put('app/app.json', app);
+  const stage = spawnSync('git', ['add', 'app/app.json'], { cwd: dir, encoding: 'utf8' });
+  assert.equal(stage.status, 0, stage.stderr);
+  const commit = spawnSync('git', ['-c', 'user.name=Harness Test', '-c', 'user.email=test@example.invalid',
+    '-c', 'commit.gpgsign=false', 'commit', '-m', 'Fixture without technical docs'], { cwd: dir, encoding: 'utf8' });
+  assert.equal(commit.status, 0, commit.stderr);
+  assert.match(commit.stderr, /Documentation warning/);
+  assert.ok(!fs.existsSync(path.join(dir, '.git/hooks/pre-push')));
+}));
+
+test('al-init refreshes an existing root managed workflow and preserves surrounding rules', () => workspace((dir, put) => {
+  put('AGENTS.md', '# Project rules\n\nKeep this.\n\n<!-- al-harness:start old -->\nOld workflow\n<!-- al-harness:end -->\n\nKeep tail.\n');
+  applyInit(dir);
+  const updated = read(dir, 'AGENTS.md');
+  assert.match(updated, /^# Project rules\n\nKeep this\./);
+  assert.match(updated, /Keep tail\.\n$/);
+  assert.doesNotMatch(updated, /Old workflow/);
+  for (const relative of ['AGENTS.md', '.github/agent/AGENTS.md']) {
+    const text = read(dir, relative);
+    assert.match(text, /al-coder/);
+    assert.match(text, /al-reviewer/);
+    assert.match(text, /at most one writer correction/);
+    assert.match(text, /never a blocked/);
+  }
+  applyInit(dir);
+  assert.equal(read(dir, 'AGENTS.md'), updated);
+}));
 
 const powershell = ['pwsh', 'powershell'].find((name) => spawnSync(name, ['-NoProfile', '-Command', '$PSVersionTable.PSVersion.Major'],
   { encoding: 'utf8' }).status === 0);

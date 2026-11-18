@@ -5,7 +5,6 @@
   "author": { "name": "waldo & AJ" },
   "repository": "https://github.com/waldo1001/DirectionsEmea.ALAgentHarness",
   "license": "MIT",
-  "agents": "copilot/agents/",
   "skills": "skills/",
   "commands": "commands/",
   "mcpServers": ".mcp.json"

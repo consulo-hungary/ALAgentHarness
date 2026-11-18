@@ -53,7 +53,17 @@ const mcpServers = Object.keys(JSON.parse(read('.mcp.json')).mcpServers);
 // Optional knowledge tools remain valid when the user disables their local servers.
 const harnessServers = ['al', 'bc-observatory', 'bc-code-atlas', 'microsoft-learn'];
 const toolServers = new Set([...mcpServers, ...harnessServers]);
-const builtinTools = new Set(['read', 'search', 'edit', 'execute']);
+const builtinTools = new Set(['read', 'search', 'edit', 'execute', 'Read', 'Glob', 'Grep', 'Write', 'Edit', 'Bash']);
+const modelTiers = { 'al-coder': 'sonnet', 'al-build-fixer': 'sonnet', 'al-sdd': 'sonnet', 'al-reviewer': 'haiku', 'al-commit': 'haiku' };
+
+// An agent's tool list names Claude (`Read`, `mcp__server__tool`) and Copilot (`read`, `server/*`) spellings.
+function assertKnownTool(tool, label) {
+  if (builtinTools.has(tool)) return;
+  const claude = tool.match(/^mcp__([a-z-]+)__[a-z_]+$/);
+  const copilot = tool.match(/^([a-z-]+)\/(\*|[a-z_]+)$/);
+  const server = (claude ?? copilot)?.[1];
+  assert.ok(server && toolServers.has(server), `${label}: unknown tool "${tool}" (allowed servers: ${[...toolServers].join(', ')})`);
+}
 
 test('smoke: the plugin ships commands and agents to test', () => {
   assert.equal(commands.length, 5, 'five public commands: init, brainstorm, implement, review, commit');
@@ -81,33 +91,26 @@ for (const file of commands) {
 }
 
 for (const name of agents) {
-  test(`smoke agent ${name}: canonical + Copilot adapter are coherent and its tools are valid`, () => {
-    assert.ok(exists(`copilot/agents/${name}.agent.md`), `missing Copilot adapter for ${name}`);
-    const canonicalPath = `agents/${name}.md`;
-    const adapterPath = `copilot/agents/${name}.agent.md`;
-    const canonical = frontmatter(read(canonicalPath), canonicalPath);
-    const adapterText = read(adapterPath);
-    const adapter = frontmatter(adapterText, adapterPath);
+  test(`smoke agent ${name}: one file, its tools and model tier are valid`, () => {
+    const agentPath = `agents/${name}.md`;
+    const agent = frontmatter(read(agentPath), agentPath);
 
-    assert.equal(canonical.name, name);
-    assert.equal(adapter.name, name);
-    assert.equal(adapter['user-invocable'], 'false', 'internal agents are not user-invocable');
-    assert.ok(adapterText.includes(`../../agents/${name}.md`), 'adapter must point at its canonical agent');
-    assert.equal(adapter.model, undefined, 'no pinned model in adapter frontmatter');
-    assert.equal(canonical.model, undefined, 'no pinned model in canonical frontmatter');
-    assertLinksResolve(canonicalPath);
-    assertLinksResolve(adapterPath);
+    assert.equal(agent.name, name);
+    assert.equal(agent['user-invocable'], 'false', 'internal agents are not user-invocable');
+    assert.equal(agent.model, modelTiers[name], `${name}: model tier must be ${modelTiers[name]}`);
+    assertLinksResolve(agentPath);
 
-    for (const tool of adapter.tools ?? []) {
-      if (builtinTools.has(tool)) continue;
-      const [server, ...rest] = tool.split('/');
-      assert.ok(rest.length === 1 && toolServers.has(server),
-        `${adapterPath}: unknown tool "${tool}" (allowed servers: ${[...toolServers].join(', ')})`);
+    for (const tool of agent.tools ?? []) assertKnownTool(tool, agentPath);
+    if (agent.tools) {
+      for (const pair of [['read', 'Read'], ['search', 'Grep']]) {
+        assert.ok(pair.every((tool) => agent.tools.includes(tool)), `${agentPath}: list both ${pair.join(' and ')}`);
+      }
+      assert.equal(agent.tools.includes('edit'), agent.tools.includes('Write'), `${agentPath}: edit and Write must match`);
     }
   });
 
   test(`smoke agent ${name}: is reachable from a command, skill or another agent`, () => {
-    const own = new Set([`agents/${name}.md`, `copilot/agents/${name}.agent.md`]);
+    const own = new Set([`agents/${name}.md`]);
     const sources = ['commands', 'skills', 'agents', 'references']
       .flatMap((directory) => walk(path.join(root, directory)))
       .map((file) => path.relative(root, file).replaceAll('\\', '/'))
@@ -117,9 +120,10 @@ for (const name of agents) {
   });
 }
 
-test('smoke: every Copilot adapter has a canonical agent', () => {
-  const adapters = list('copilot/agents', '.agent.md').map((file) => file.replace('.agent.md', ''));
-  assert.deepEqual(adapters, agents);
+test('smoke: no second agent set exists next to agents/ (it would shadow or duplicate them)', () => {
+  assert.ok(!exists('copilot/agents'));
+  assert.equal(JSON.parse(read('plugin.json')).agents, undefined);
+  for (const file of fs.readdirSync(path.join(root, 'agents'))) assert.ok(file.endsWith('.md') && !file.endsWith('.agent.md'), file);
 });
 
 for (const skill of skills) {
@@ -157,7 +161,7 @@ test('smoke: plugin stays Business Central AL only (no web/Python/generic-projec
     for (const pattern of outOfScope) assert.doesNotMatch(text, pattern, `${relative} contains out-of-scope ${pattern}`);
   }
   for (const name of agents) {
-    const tools = frontmatter(read(`copilot/agents/${name}.agent.md`), name).tools ?? [];
+    const tools = frontmatter(read(`agents/${name}.md`), name).tools ?? [];
     assert.ok(!tools.includes('web'), `${name}: general web tool is out of scope`);
   }
 });
@@ -171,6 +175,10 @@ test('smoke: MCP failure policy states the halt-after-five rule with progress st
   assert.match(policy, /Check manually/);
   assert.match(policy, /Retry.*Continue without.*Stop here/);
   assert.match(policy, /QUESTION: MCP <server> failed ~5x/);
+  assert.match(policy, /about \*\*30 seconds\*\*/);
+  assert.match(policy, /Retry the same call once/);
+  assert.match(policy, /skip that server for the rest of the session/);
+  assert.match(policy, /SKIPPED: MCP <server> unresponsive 2x/);
   assert.doesNotMatch(policy, /ninja/i);
   for (const server of harnessServers) assert.ok(policy.includes(`\`${server}\``), `policy misses ${server}`);
   assert.doesNotMatch(JSON.stringify(Object.keys(JSON.parse(read('.mcp.json')).mcpServers)), /ninja/i);
@@ -179,9 +187,10 @@ test('smoke: MCP failure policy states the halt-after-five rule with progress st
 for (const name of agents) {
   test(`smoke agent ${name}: MCP users must reference the failure policy`, () => {
     const canonical = read(`agents/${name}.md`);
-    const tools = frontmatter(read(`copilot/agents/${name}.agent.md`), name).tools ?? [];
+    const tools = frontmatter(canonical, name).tools ?? [];
     const usesMcp = tools.some((tool) => tool.includes('/')) || /mcp__/.test(canonical);
     if (usesMcp) assert.match(canonical, /mcp-failure-policy\.md/, `${name} uses MCP but ignores the policy`);
+    if (usesMcp) assert.match(canonical, /30 s: retry once.*skip that server/, `${name} lacks the 30 s retry-then-skip rule`);
   });
 }
 
@@ -274,7 +283,7 @@ test('smoke: deployed guardrail blocks literal UI text in .al writes only', () =
 
 test('smoke: no pinned model versions in workflows', () => {
   const pinned = /claude[ -]opus[ -]\d|opus \d\.\d|\bgpt-\d|\bsonnet \d|\bhaiku \d/i;
-  const files = ['agents', 'commands', 'skills', 'copilot', 'templates', 'README.md']
+  const files = ['agents', 'commands', 'skills', 'templates', 'README.md']
     .flatMap((entry) => (fs.statSync(path.join(root, entry)).isDirectory() ? walk(path.join(root, entry))
       : [path.join(root, entry)]))
     .map((file) => path.relative(root, file).replaceAll('\\', '/'))

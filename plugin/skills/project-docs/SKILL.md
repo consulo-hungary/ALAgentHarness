@@ -20,15 +20,16 @@ Templates: [project-overview](../../templates/project-overview.md), [technical-o
   (grep, line ranges); never invent. Exact IDs and fields stay in `object-index.json`; do not copy them.
 - Keep each overview compact. Write facts the code shows; mark guesses as "unverified".
 
-## Update rule (every change and every commit)
+## Update guidance (when relevant)
 
 1. Refresh the index with [al-object-index](../al-object-index/SKILL.md).
 2. Compare it to the technical overview: add rows for new objects and fields, drop removed ones, fix changed purposes.
 3. Add a dated line to the technical-overview change log and to the affected feature in the project overview.
 4. Append an Implementation Log entry to the spec (see below). Update `date` frontmatter on every doc you touch.
 
-A git pre-commit hook blocks commits that touch `.al`, `app.json` or `docs/specs/*.md` without a staged
-`docs/knowledge/technical-overview.md`. The developer can override with `AL_DOCS_SKIP=1`.
+The git pre-commit documentation check is advisory. Missing or intentionally deferred technical docs
+must never block commits or pushes, including agent-assisted commits. Warn briefly when relevant;
+do not create placeholder documents or require a skip flag. Unrelated security/signing hooks still apply.
 
 ## Spec log
 

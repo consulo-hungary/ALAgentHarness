@@ -13,7 +13,25 @@ file system (downloading or unzipping the base app, searching symbol packages, r
   calls return nothing useful and the approach is not improving.
 - NOT a failure: a valid answer of "no results" or "not found". Report it as such.
 
-## The rule
+## Unresponsive call: 30 seconds, retry once, then skip the server
+
+A call that returns nothing within about **30 seconds** is unresponsive, not just slow.
+
+1. Retry the same call once.
+2. If the retry is also unresponsive, **skip that server for the rest of the session**: make no
+   further calls to it, in MAIN or in any subagent MAIN launches.
+3. Do the task another way, within the limits below: another MCP server (`bc-observatory` and
+   `bc-code-atlas` cover each other; `microsoft-learn` for documented behavior), the local object
+   index, existing workspace code, or the developer's answer. Label what the skipped server
+   would have verified as "not verified by <server>"; never present it as sourced.
+4. Do not halt or open the dialog for this case. Report the skip once in the final handoff.
+   If no allowed alternative exists and the missing facts block correctness, return to the
+   halt rule below.
+
+Subagents return `SKIPPED: MCP <server> unresponsive 2x (30 s): <tool>` in their result so MAIN
+keeps the server skipped and tells later subagents.
+
+## The rule (errors and repeated useless results)
 
 1. Count failing requests per task across tools and servers. Change the approach after two
    failures; do not repeat the same call with cosmetic changes.

@@ -106,9 +106,9 @@ historical contracts; [plugin/README.md](plugin/README.md) describes the current
 |---------|------|----------|
 | `/AL-init` | Agentifies a new or existing repo: docs folders, project and technical overview, `AGENTS.md` rules, guardrail hooks, git docs check, local object index. | Overwrite user text, move AL, build or commit. |
 | `/AL-brainstorm` | MAIN brainstorming, one batched question round (+1 if necessary), at-most-100-line numbered spec + README line, then STOP. | Default Opus/subagents, implementation, builds, tests or translation. |
-| `/AL-implement <spec>` | Optional MAIN code-only implementation, one build after estimate/consent, then docs and spec log updates; `--full` opts into expensive SDD. | Default tests, publish, mutation, DoD, reviewer or translation; automatic build repair. |
+| `/AL-implement <spec>` | Writer subagent, independent clean-code reviewer, at most one correction, one build after bundle consent; `--full` opts into SDD. | Default tests, publish, mutation, DoD or translation; automatic build repair/review loops. |
 | `/AL-review [scope]` | Read-only review of the whole codebase or one scope (e.g. `the object IDs`); report in `docs/generated/reviews/`. | Edit AL, build, or run without a report. |
-| `/AL-commit` | Updates the technical docs, then creates short local commits with explicit staging. | Edit code, include secrets, rewrite history, push or create a PR. |
+| `/AL-commit` | Creates short local commits with explicit staging; includes available relevant docs, warns if missing. | Block for missing technical docs, edit code, include secrets, rewrite history, push or create a PR. |
 
 There is deliberately no whole-codebase refactor command. Brainstorming never continues into
 implementation automatically. Missing validation is reported, not converted into success.
@@ -121,13 +121,14 @@ IDs (`-NextId`, `-NextMemberId`). IDs are not reserved; duplicate detection catc
 
 ### Focused internal specialists
 
-The specialists below are expensive full-mode opt-ins, never default steps:
+Explicit implementation and scoped refactoring use a writer and independent reviewer after bundle cost
+consent. Brainstorming stays in MAIN; full SDD remains opt-in.
 
 | Agent | Responsibility |
 |-------|----------------|
-| `al-coder` | Implement approved logic after an executed assertion failure proves RED. |
+| `al-coder` | Write scoped implementation/refactoring; at most one review correction. RED required only in full SDD. |
 | `al-build-fixer` | Full mode only: one compiler fix/rebuild cycle, then human handoff. |
-| `al-reviewer` | Independent read-only review of the final validated delta; never review its own edits. |
+| `al-reviewer` | Independent read-only clean-code delta review; concrete defects and unnecessary complexity, not speculative checks. |
 | `al-sdd` | Coordinate tests/stubs, RED, implementation, GREEN, reversible mutation, RED, restore and final GREEN. |
 | `al-commit` | Group reviewed changes into small local commits. |
 
@@ -137,11 +138,11 @@ Sandbox permission. Evidence stays in session, not an inflated spec.
 ### What `/AL-init` leaves in a repo
 
 ```text
-AGENTS.md / CLAUDE.md          Harness block: rules every chat follows (preserves your own text)
-.github/copilot-instructions.md Pointer to AGENTS.md for Copilot
+AGENTS.md                     Managed workflow block, preserving custom text
+.github/agent/AGENTS.md        Same managed workflow and preserved shared project instructions
+.github/copilot-instructions.md Pointer to shared AGENTS.md for Copilot
 .github/hooks/                 al-guardrails (no literal UI text, no base-app digging), al-docs-check
-.claude/settings.json          Same guardrail for Claude Code (only if the file did not exist)
-.git/hooks/pre-commit          Requires docs/knowledge/technical-overview.md with AL/spec changes
+.git/hooks/pre-commit          Advisory docs reminder; missing technical docs never block Git
 docs/specs/                    Feature specs (up to 100 lines; Implementation Log grows)
 docs/knowledge/                Your inputs + project-overview.md, technical-overview.md, object-index.json
 docs/generated/                ONLY output folder for generated files, reports and exports
@@ -166,6 +167,7 @@ autocomplete to find **AL-init**, **AL-brainstorm**, **AL-implement**, **AL-revi
 **AL-commit**. Use the namespace shown by your host if it does not expose a bare command.
 Do not use `!AL-review`: `!` can mean shell execution rather than a plugin command.
 
-Use the latest enabled Claude model (Sonnet-class for design and code, Haiku for mechanical edits; GPT is
-fine for docs). Opus only after you grant it. Spec work normally needs no MCP servers.
+Use the latest enabled Claude model: Sonnet for hard tasks (design, writing AL), Haiku for easy tasks (code
+review, lookups, mechanical edits; GPT is fine for docs). Opus only for a very hard reasoning task, after you
+say Yes in a dialog box. Spec work normally needs no MCP servers.
 See [plugin/README.md](plugin/README.md) for details and [docs/PORTING.md](docs/PORTING.md) for compatibility.

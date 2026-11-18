@@ -24,7 +24,11 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 ## How we write AL
 
 - Extend, never modify: `tableextension`, `pageextension`, event subscribers.
-- Business logic lives in codeunits, not in page triggers.
+- Pages coordinate UI and call existing application APIs. Extract substantial or reusable
+  business logic into appropriate codeunits; no mandatory Meth layers or table wrappers.
+- Meet the same agreed behavior with the smallest clear implementation. Reuse standard
+  validation; no duplicate checks or speculative workflows. Log optional concerns in the
+  spec's Implementation Log, not as new runtime restrictions. Report known correctness blockers.
 - Text shown by `Error`, `Message` and `Confirm` is a `Label` variable, never a literal.
 - Identify AL objects as `Type ID "Name"`: `Table 18 "Customer"`,
   `Codeunit 414 "Release Sales Document"`.
@@ -38,7 +42,7 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 - Never rewrite git history: no force push, no rebase or reset of commits others may have.
 - Never claim compilation success without a green build. Default implementation has
   ONE build after estimate/consent; return compiler errors to the human, no automatic retry.
-- DoD, tests, mutation, independent review, translation and structure polish are opt-ins,
+- DoD, tests, mutation, translation and structure polish are opt-ins,
   never default completion gates. `DEFINITION-OF-DONE.md` applies only in explicit full mode.
 
 ## Skills (loaded on demand)
@@ -46,7 +50,8 @@ it is a skill in `.claude/skills/`, not a paragraph here.
 Skills, agents, commands, the guardrail hook and the MCP servers come from the
 `al-agent-harness` plugin (`plugin/`). This file keeps what is specific to this repo.
 For ordinary BC/AL feature-design requests, load the installed `bc-workflow` skill even
-without slash commands. Other skills load only when relevant; specialists never auto-run.
+without slash commands. Other skills load only when relevant; implementation/refactoring uses the
+bounded writer/reviewer workflow below, not the full SDD pipeline.
 
 | When | Skill |
 |------|-------|
@@ -56,17 +61,32 @@ without slash commands. Other skills load only when relevant; specialists never 
 | explicit full mode or requested DoD report only (expensive) | `definition-of-done` |
 | before writing, designing or reviewing AL | `company-rules` |
 
+## Models (Claude family, latest enabled version, never pinned in files)
+
+- **Sonnet** for hard tasks: design, brainstorming, writing AL, compiler repair, SDD.
+- **Haiku** for easy tasks: code review, lookups, mechanical edits, commit grouping, translation.
+- **Opus** only when the user grants it in a dialog box (`vscode_askQuestions`, options Yes once / No)
+  for a very hard, complex reasoning task; at most one consultation, after a cost estimate. Never
+  default, never an availability blocker; declined or unavailable means continue on Sonnet.
+- GPT is fine for documentation. Switching the picker is a host action; never claim to switch it.
+- Subagents: `al-coder`, `al-build-fixer`, `al-sdd` declare `model: sonnet`; `al-reviewer`, `al-commit`
+  declare `model: haiku`. When MAIN launches one, pass that tier as the subagent `model`.
+
 ## Budget workflow
 
-Use a selected mid-tier model in MAIN; cheap tier for mechanical tasks. Opus is opt-in
-`--deep` only, at most one consultation, never an availability blocker. Follow `bc-workflow`.
+Follow `bc-workflow`.
 MAIN brainstorms with about 10 targeted reads/greps and 15 total tool calls, one batch of
 3-6 questions with defaults (at most two rounds), then writes an at-most-100-line spec and
 one README link line after agreed direction. STOP for developers after spec approval.
 Every spec MUST have `status: draft | approved | implemented` and `date: YYYY-MM-DD`
 (last updated). Developer approval sets approved; confirmed completion sets implemented.
-No feature subagents, repeated reads, hashes, locks or approval bookkeeping by default.
-Before subagents, build/publish or >150-line code steps, estimate cost and ask once.
+No brainstorming subagents, repeated reads, hashes, locks or approval bookkeeping by default.
+Explicit AL implementation/refactoring: MAIN coordinates one al-coder, one independent al-reviewer,
+and at most one writer correction for concrete defects or unnecessary complexity. Estimate 2-3 calls
+and one build; ask once for the bundle. MAIN checks corrections without another reviewer. Optional
+concerns go in the existing spec log or handoff. No default RED, DoD, tests or deployment.
+If isolated agents are unavailable, report the blocker and stop; do not fall back to main-chat work.
+Missing technical documentation never blocks a commit or push; warn when relevant.
 
 ## Focused commands
 
@@ -75,7 +95,7 @@ Before subagents, build/publish or >150-line code steps, estimate cost and ask o
 | initialize or agentify a repo | `/AL-init` - docs folders, project/technical overview, AGENTS.md block, guardrail hooks, git docs check |
 | review the codebase or one part | `/AL-review [scope]` - read-only; report in `docs/generated/reviews/` |
 | design a new feature | `/AL-brainstorm` - MAIN questions + lean numbered spec, then STOP |
-| explicitly implement a spec | `/AL-implement <spec>` - MAIN code only, one build; `--full` is expensive opt-in |
+| explicitly implement a spec | `/AL-implement <spec>` - writer, independent review, at most one correction, one build; `--full` opts into SDD |
 | group and commit existing changes | `/AL-commit` - small grouping agent, short local commits; no code edits, push or PR |
 
 Commands target the active workspace, not tagged plugin resources. Do not run consuming
@@ -84,7 +104,10 @@ templates and indexes are not specs. Brainstorming NEVER starts implementation o
 
 ## Internal specialists
 
-Only explicit expensive `--full` enables `al-sdd`, `al-coder`, `al-build-fixer` (one fix
-cycle) and `al-reviewer`; DoD also needs opt-in. Never relaunch a child to relay an answer.
+Explicit implementation/refactoring uses `al-coder` and `al-reviewer`. Only expensive `--full`
+enables `al-sdd` and `al-build-fixer` (one fix cycle); DoD also needs opt-in.
+Never relaunch a child only to relay an answer.
+An MCP call silent for about 30 s is retried once; if it hangs again, skip that server for the
+session (MAIN and subagents) and continue another way, per `plugin/references/mcp-failure-policy.md`.
 Keep startup/commit grouping separate. Developers run NAB translations manually; explicit
 AI translation uses the cheap tier and only current-feature units, even in full mode.

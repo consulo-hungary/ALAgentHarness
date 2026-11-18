@@ -44,8 +44,9 @@ that the article explicitly identifies as retired.
 
 ### 4. Apply
 
-- **Writing code:** follow the article and any applicable `.good.al` pattern; never emit the
-  applicable `.bad.al` pattern.
+- **Writing code:** follow the current article; use samples only if it has not retired them.
+  Architecture rules do not mandate Meth layers, wrappers or speculative checks. Preserve
+  unrelated existing patterns rather than refactoring them to match a sample.
 - **Designing:** mention only rules that materially affect a business/design decision;
   do not pad the spec with a rule checklist.
 - **Checking:** run the check from the rule's Description on every changed `.al` file.

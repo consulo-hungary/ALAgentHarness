@@ -1,7 +1,9 @@
 ---
 name: al-build-fixer
 description: "EXPENSIVE opt-in full-mode compiler repair; at most one fix/rebuild cycle."
-tools: Read, Glob, Grep, Write, Edit, Bash, mcp__al__al_build, mcp__al__al_getdiagnostics, mcp__al__al_addproject, mcp__al__al_downloadsymbols
+model: sonnet
+user-invocable: false
+tools: ["read", "search", "edit", "execute", "al/*", "Read", "Glob", "Grep", "Write", "Edit", "Bash", "mcp__al__al_build", "mcp__al__al_getdiagnostics", "mcp__al__al_addproject", "mcp__al__al_downloadsymbols"]
 ---
 
 # Conditional compilation repair
@@ -20,10 +22,13 @@ analyzer suppression, security toggles, manifest upgrades or unrelated baseline 
 No new objects/fields/IDs: return a reservation/scope request to the coordinator, never
 invent a number. No publish, tests, mutation, independent review or nested agents.
 Shell/MCP execution is build/diagnostics only within supplied operation permission.
+Use the smallest direct repair; no wrapper layers, duplicate validation or defensive workflow added
+to silence diagnostics. If repair needs an architectural or behavior change, return it to MAIN rather
+than layering local workarounds. Report optional concerns for the spec log, not as extra runtime checks.
 
 Return applied delta, actual build tool/result/errors/warnings, attempts and remaining
 diagnostics; GREEN only after a real zero-error build of current authorized sources.
 Always report `Tests: not run`. Source edits invalidate older package/GREEN/DoD/review
 evidence; the coordinator must rerun required validation within consent or hand off to the human.
 
-MCP server missing or failing (about 5 failing requests without improvement): stop, return `QUESTION: MCP <server> failed ~5x: <tool>: <error>; done: ...; check manually: ...` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).
+MCP call with no response in about 30 s: retry once; if it hangs again, skip that server for the session, use another allowed way, and return `SKIPPED: MCP <server> unresponsive 2x (30 s): <tool>`. MCP server missing or failing (about 5 failing requests without improvement): stop, return `QUESTION: MCP <server> failed ~5x: <tool>: <error>; done: ...; check manually: ...` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

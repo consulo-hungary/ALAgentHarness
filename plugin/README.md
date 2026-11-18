@@ -7,15 +7,31 @@ translation are explicit opt-ins because they cost tokens.
 
 | Command | Boundary |
 |---------|----------|
-| `/AL-init` | Agentify a new or existing repo: docs, `.github/agent/AGENTS.md` rules, guardrail hooks and git docs check. Preserves existing instructions during migration. |
-| `/AL-brainstorm <idea>` | MAIN, Claude Sonnet-class, interactive question boxes in one batch (at most two rounds), lean spec (up to 100 lines), then STOP. `--deep` allows ONE Opus consultation after estimate/consent. |
-| `/AL-implement <spec>` | Explicit code-only step, ONE build after estimate/consent, then docs and spec log update. `--full` is the EXPENSIVE SDD/tests/mutation/DoD/review bundle. |
+| `/AL-init` | Merge workflow into root/shared `AGENTS.md`, create project docs and guardrails, refresh advisory Git docs check. Preserve custom text. |
+| `/AL-brainstorm <idea>` | MAIN, Claude Sonnet-class, interactive question boxes in one batch (at most two rounds), lean spec (up to 100 lines), then STOP. `--deep` allows ONE Opus consultation after estimate and a Yes in a dialog box. |
+| `/AL-implement <spec>` | One writer, independent clean-code review, at most one correction, ONE build after bundle consent. `--full` opts into SDD/tests/mutation/DoD. |
 | `/AL-review [scope]` | Read-only review. No scope = whole codebase; `/AL-review the object IDs` = objects, names, IDs, fields, gaps. Writes `docs/generated/reviews/<date>-<slug>.md`. |
-| `/AL-commit` | Updates the technical docs first, then small local commits; preserves unrelated staging; no push or PR. |
+| `/AL-commit` | Small local commits; include relevant available docs, warn if missing, preserve unrelated staging; no push or PR. |
 
 Use slash autocomplete (possibly namespaced). `!AL-init` and other `!` forms are shell execution, NOT chat
 commands. Target the active consuming workspace, never this plugin. There is deliberately no command that
 refactors a whole codebase.
+
+## Implementation style
+
+Meet the same agreed behavior with the smallest clear change. Reuse existing Microsoft and local
+application validation, preparation and posting rather than recreating their checks. No mandatory Meth
+layers, table wrappers, dispatchers, event scaffolding or speculative workflows. Every new object needs
+a concrete purpose. Keep lookups read-only; when fixes accumulate, reconsider the call path.
+After implementation, record optional concerns with consequences in the spec's Implementation Log for
+developers, not as unapproved runtime restrictions. Known permission/data-integrity defects remain blockers.
+
+Explicit implementation and scoped refactoring use one [al-coder](agents/al-coder.md), then one
+independent [al-reviewer](agents/al-reviewer.md), coordinated by MAIN. After consent to the bounded
+2-3-call bundle, allow at most one writer correction for concrete defects or unnecessary complexity.
+MAIN checks corrections; no second reviewer or automatic loops. Optional preferences are nonblocking.
+Default review needs no RED, DoD or sandbox. If isolated agents or writer edit access are unavailable,
+report the blocker and stop; do not fall back to main-chat work.
 
 ## Start in a repo
 
@@ -23,17 +39,18 @@ Run `/AL-init` once. It scans the workspace (`scripts/al-init.mjs`), asks one ba
 specs into `docs/specs/`? which knowledge documents matter?), then:
 
 - creates the three docs folders and `docs/knowledge/project-overview.md` + `technical-overview.md`;
-- writes the harness block into `.github/agent/AGENTS.md` and a routing block into `.github/copilot-instructions.md`;
+- merges the harness block into root `AGENTS.md` and `.github/agent/AGENTS.md`, and routing into `.github/copilot-instructions.md`;
   MAIN reviews existing Copilot instructions and transfers useful rules without losing uncertain content. The rules
   cover the harness, precision, BCQuality, base-app field/event first,
-  the effort rule (full feature with X lines or 80% with about 0.1X), halt after about 5 failing tool requests;
+  the effort rule (same agreed behavior, simpler implementation), halt after about 5 failing tool requests;
 - deploys the guardrails that plugin-level hooks could not reliably deliver: `.github/hooks/al-guardrails.*` (no
-  literal UI text, no digging in base-app packages), and a git pre-commit check. Copilot discovers the shared
+  literal UI text, no digging in base-app packages), and an advisory git pre-commit docs check. Copilot discovers the shared
   hook configuration directly from `.github/hooks/`; no separate settings file is generated;
 - builds `docs/knowledge/object-index.json` and lets the agent fill both overviews from the code.
 
-Copilot is instructed to read `.github/agent/AGENTS.md` via `.github/copilot-instructions.md`. Existing root
-`AGENTS.md` files remain untouched. `/AL-init` does not create or modify `CLAUDE.md` or `.claude/`.
+Copilot is instructed to read `.github/agent/AGENTS.md` via `.github/copilot-instructions.md`. Root and
+shared custom text outside managed blocks is preserved; MAIN reports conflicting project rules.
+`/AL-init` does not create or modify `CLAUDE.md` or `.claude/`.
 Re-running the script refreshes only managed blocks; MAIN avoids duplicating transferred instructions.
 
 ## Object index (no subscription)
@@ -50,8 +67,9 @@ Lookup order for people and AI: project overview, technical overview, spec, code
 [project-docs](skills/project-docs/SKILL.md).
 
 - **Project overview**: extension goal, features per BC topic, dated change history.
-- **Technical overview**: purpose of every object, new fields, specs. The pre-commit hook requires it to be
-  staged with any commit touching `.al`, `app.json` or a spec (developer override: `AL_DOCS_SKIP=1`).
+- **Technical overview**: purpose of every object, new fields, specs. Keep it current when relevant.
+  Missing or intentionally deferred docs only warn; neither agents nor the docs hook block commits/pushes.
+  Rerun `/AL-init` to replace an older deployed blocking checker; unrelated Git hooks are preserved.
 - **Specs** follow the [lean template](templates/spec-TEMPLATE.md): `status` and `date` frontmatter, seven sections,
   at most 100 lines for the planning part, at most 10 manual checks. After implementation the Implementation Log
   grows without limit: dated entries with what changed, why (git has the code), features gained or lost, and
@@ -63,15 +81,15 @@ ALL generated files go ONLY under `docs/generated/`. Specs live in `docs/specs/`
 
 ## Models and cost
 
-- Claude family by default (Haiku mechanical, Sonnet design and code); GPT is fine for writing docs. Always the
-  latest enabled version, never pinned. Opus only after the user grants it.
-- No subagents by default. Before a subagent, build/publish or a step of more than about 150 lines of code,
-  estimate calls, output and builds and ask once. Never reread unchanged files; never relaunch a child to relay.
+- Claude family only: Sonnet for hard tasks (design, writing AL, compiler repair), Haiku for easy tasks (code review,
+  lookups, mechanical edits, commit grouping); GPT is fine for writing docs. Always the latest enabled version,
+  never pinned. Opus only for a very hard reasoning task and only after the user says Yes in a dialog box.
+- No brainstorming subagents. Explicit implementation/refactoring includes a writer, independent reviewer
+  and at most one correction; estimate calls/output/builds and ask once for the bundle. No relay-only calls.
 - Default implementation: production code only, small edits, one build, compiler errors go to the human, no
   automatic repair loop. A red or unavailable build is reported as incomplete, never as compiled.
-- Only `--full` enables [al-sdd](agents/al-sdd.md), [al-coder](agents/al-coder.md),
-  [al-build-fixer](agents/al-build-fixer.md), [DoD](skills/definition-of-done/SKILL.md) and
-  [al-reviewer](agents/al-reviewer.md); it needs bundle consent and exact nonproduction Sandbox permission.
+- Only `--full` enables [al-sdd](agents/al-sdd.md), [al-build-fixer](agents/al-build-fixer.md) and
+  [DoD](skills/definition-of-done/SKILL.md); it needs bundle consent and exact nonproduction Sandbox permission.
 - Developers run NAB refresh/translation by hand. AI XLF work is excluded even from full mode.
 
 ## When tools fail
@@ -87,11 +105,11 @@ on disk. See the [failure policy](references/mcp-failure-policy.md).
    (build). Enable bc-code-atlas, bc-observatory and Learn only for genuinely uncertain BC facts.
 3. Disable unrelated skill providers for this workspace and keep NAB translation instructions off unless
    translating. Start a fresh chat after provider or model changes.
-4. Existing project instructions win over generated ones: remove stale automatic SDD/DoD/reviewer rules
-   with developer consent.
+4. Report conflicts with existing project instructions. Remove stale automatic SDD/DoD rules only with
+  developer consent; keep the bounded default clean-code review distinct from full SDD.
 
 ## Parts
 
-`commands/` chat commands, `agents/` specialists (`copilot/agents/` adapters), `skills/` on-demand knowledge,
+`commands/` chat commands, `agents/` specialists (one file each, read by VS Code, Copilot CLI and Claude Code), `skills/` on-demand knowledge,
 `scripts/` index, init and commit helpers, `templates/` files that `/AL-init` deploys, `references/` policies.
 The plugin itself registers no hooks; `/AL-init` deploys them into each repo so they also work there.

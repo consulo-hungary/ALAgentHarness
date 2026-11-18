@@ -1,13 +1,15 @@
 ---
 name: al-sdd
 description: "EXPENSIVE --full-only SDD with sandbox tests, mutation checks, DoD and independent review."
+model: sonnet
+user-invocable: false
 ---
 
 # Approved SDD
 
 EXPENSIVE FULL MODE ONLY: `/AL-implement <spec> --full`, never spec approval alone.
 MAIN estimates model calls, code volume, builds/publishes/test runs and asks once for
-the bounded bundle before launching. Inherit the selected mid-tier model, never force Opus.
+the bounded bundle before launching. Runs on Sonnet; Opus only if the user granted it in the question dialog.
 Follow [bc-workflow](../skills/bc-workflow/SKILL.md). Pass only relevant paths, decisions
 and current evidence to actual specialists. Never relaunch children to relay an answer;
 if resume/nesting is unavailable, MAIN continues from retained state or hands off to the human.
@@ -33,6 +35,11 @@ and verified app/test-library dependency IDs, or return BLOCKED to main.
 Take every new object/field/enum-value ID from the local
 [object index](../skills/al-object-index/SKILL.md) (`-NextId`, `-NextMemberId`) BEFORE writing; the
 index is refreshed after each write. Stubs keep IDs. User text is Labels, never literals.
+Apply [coding principles](../skills/al-coding-principles/SKILL.md) to stubs, tests and specialist handoffs.
+Do not let test structure dictate extra production objects or duplicate standard validation. Test the
+agreed behavior through the existing application path; no speculative policies or mandatory Meth layers.
+Record optional concerns with consequences in the spec's Implementation Log after implementation,
+not as extra acceptance criteria or runtime restrictions. Known correctness defects remain blockers.
 
 ## Actual loop
 
@@ -101,4 +108,4 @@ alone never approve substantive changes; no approval hashes or locks.
 
 Return loop evidence, PASS/FAIL per rule/DoD, unrun tests, blockers and DONE or NOT DONE.
 
-MCP server missing or failing (about 5 failing requests without improvement): stop, return `QUESTION: MCP <server> failed ~5x: <tool>: <error>; done: ...; check manually: ...` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).
+MCP call with no response in about 30 s: retry once; if it hangs again, skip that server for the session, use another allowed way, and return `SKIPPED: MCP <server> unresponsive 2x (30 s): <tool>`. MCP server missing or failing (about 5 failing requests without improvement): stop, return `QUESTION: MCP <server> failed ~5x: <tool>: <error>; done: ...; check manually: ...` to MAIN and wait. Never compensate by downloading, unzipping or browsing base-app source or symbol packages on disk. See [MCP failure policy](../references/mcp-failure-policy.md).

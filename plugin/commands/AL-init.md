@@ -3,20 +3,24 @@ description: "Agentify a new or existing AL repo: docs folders, project docs, AG
 argument-hint: "[--move-specs]"
 ---
 
-Follow [project-docs](../skills/project-docs/SKILL.md) in the MAIN chat, mid-tier model, no subagents.
+Follow [project-docs](../skills/project-docs/SKILL.md) in the MAIN chat, Sonnet-class model, no subagents.
 Target the active workspace, not this plugin.
 
 1. Plan: run `node <plugin>/scripts/al-init.mjs plan <workspace>` (`<plugin>` is the folder above this
    command's `commands/` directory). Show the findings and ask ONE batch of questions: move existing spec
    files into `docs/specs/` (`--move-specs`), and which documents in `docs/knowledge` are relevant.
-2. Before apply, read any existing `.github/copilot-instructions.md` and `.github/agent/AGENTS.md`.
+2. Before apply, read any existing root `AGENTS.md`, `.github/copilot-instructions.md` and `.github/agent/AGENTS.md`.
    Identify useful project rules and context to transfer; preserve uncertain or conflicting content, and do
-   not copy the old harness-managed block. Leave any root `AGENTS.md` unchanged except for the
-   evidenced naming convention in step 6.
+   not copy the old harness-managed block. Preserve root and shared custom text outside managed blocks;
+   report conflicts with the new workflow rather than silently deleting project rules.
 3. Apply: run `node <plugin>/scripts/al-init.mjs apply <workspace> [--move-specs]`. It creates `docs/specs`,
-   `docs/knowledge` and `docs/generated`, the overview skeletons, the harness block in `.github/agent/AGENTS.md`,
+   `docs/knowledge` and `docs/generated`, the overview skeletons, the harness block in root `AGENTS.md`
+   and `.github/agent/AGENTS.md`,
    the routing block in `.github/copilot-instructions.md`, Copilot hooks in `.github/hooks/`, and the git
-   pre-commit docs check. It does not create or modify Claude files or user text outside managed blocks.
+   advisory pre-commit docs check. Existing deployed docs checkers are refreshed so missing technical docs
+   never block commits or pushes. Unrelated Git hooks are preserved. It does not modify Claude files or
+   user text outside managed blocks. The installed workflow uses one writer, independent clean-code review
+   and at most one correction for explicit implementation/refactoring; brainstorming remains in MAIN.
 4. Transfer the useful existing Copilot instructions into `.github/agent/AGENTS.md` outside the managed block,
    without duplicating existing rules. Only remove original text after its meaning has been preserved there;
    keep uncertain or conflicting text in place and report it. Keep the Copilot routing block. On repeat runs,

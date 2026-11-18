@@ -149,6 +149,7 @@ export function applyInit(rootArg, { moveSpecs = false } = {}) {
   put('docs/knowledge/project-overview.md', fill(read(path.join(TEMPLATES, 'project-overview.md'))));
   put('docs/knowledge/technical-overview.md', fill(read(path.join(TEMPLATES, 'technical-overview.md'))));
 
+  merge('AGENTS.md', 'AGENTS.md');
   merge('.github/agent/AGENTS.md', 'AGENTS.md');
   merge('.github/copilot-instructions.md', 'copilot-instructions.md');
 
@@ -165,7 +166,7 @@ export function applyInit(rootArg, { moveSpecs = false } = {}) {
       fs.writeFileSync(hook, template, { mode: 0o755 });
       log('created', '.git/hooks/pre-commit');
     } else if (!/al-docs-check/.test(read(hook))) {
-      log('manual', '.git/hooks/pre-commit', 'exists: add the line `node .github/hooks/al-docs-check.mjs || exit 1` yourself');
+      log('manual', '.git/hooks/pre-commit', 'exists: optionally add `node .github/hooks/al-docs-check.mjs` for advisory documentation warnings');
     } else log('kept', '.git/hooks/pre-commit');
   } else {
     log('manual', '.git/hooks/pre-commit', 'no .git directory: run git init, then /AL-init again');
